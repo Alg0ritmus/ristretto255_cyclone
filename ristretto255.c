@@ -3,36 +3,8 @@
 #include "utils.h"
 #include "curve25519.h"
 
-
-
-// import pre cyclone:
-// pories unpack/pack
-// ristretto255_scalarmult - je toto suitable pre cyclone ?
-
-//
-
-
-// swap29915 - curve25519Swap
-// fsub - curve25519Sub
-// fadd - curve25519Add
-// fmul - curve25519Mul
-// pow2 - curve25519Sqr
-// ge25519_addition
-
-// carray25519 - curve25519Red
-
-// bytes_eq_32 - curve25519Copy
-// b_copy - curve25519Copy
-// fcopy - curve25519Copy
-
-
-// inv_sqrt - curve25519Sqrt
-
-// is_neg_bytes - nemam
-// is_neg() - nemam
-// fneg - nemam
-// fabsolute - nemam
-
+#define WIPE(felem) (felem, sizeof(felem)) // 1st attempt to make it generic, but we probably dont need it to be generic, 
+#define WIPE_PT(rpoint) wipe_ristretto255_point(rpoint)
 #define swap25519 curve25519Swap
 #define fsub curve25519Sub
 #define fadd curve25519Add
@@ -40,7 +12,7 @@
 #define pow2 curve25519Sqr
 
 
-#define feq curve25519Comp
+#define feq !curve25519Comp 
  
 #define carry25519(out) curve25519Red(out, in)
 
@@ -48,24 +20,38 @@
 #define b_copy curve25519Copy
 #define fcopy curve25519Copy
 
+// setting "order" during pack/unpack w respect to BIGENDIAN_FLAG
+#ifdef BIGENDIAN_FLAG
+static const int shift[] = {0, 8, 16, 24};
+#else
+static const int shift[] = {24, 16, 8, 0};
+#endif
+
+void wipe_ristretto255_point(ristretto255_point* ristretto_in){
+  WIPE(ristretto_in->x);
+  WIPE(ristretto_in->y);
+  WIPE(ristretto_in->z);
+  WIPE(ristretto_in->t);
+
+}
 
 void pack(u8* uint8Array,const u32* uint32ArrayIn) {
     uint32_t uint32Array[8];
-    curve25519Red(uint32Array, uint32ArrayIn);
+    curve25519Red(uint32Array, uint32ArrayIn); // modulo 2P, so we need reduction 
     for (int i = 0; i < 8; ++i) {
-        uint8Array[i * 4 + 3] = ((uint32Array[i] >> 24) & 0xFF);
-        uint8Array[i * 4 + 2] = ((uint32Array[i] >> 16) & 0xFF);
-        uint8Array[i * 4 + 1] = ((uint32Array[i] >> 8) & 0xFF);
-        uint8Array[i * 4 + 0] = (uint32Array[i] & 0xFF);
+        uint8Array[i * 4 + 3] = ((uint32Array[i] >> shift[0]) & 0xFF);
+        uint8Array[i * 4 + 2] = ((uint32Array[i] >> shift[1]) & 0xFF);
+        uint8Array[i * 4 + 1] = ((uint32Array[i] >> shift[2]) & 0xFF);
+        uint8Array[i * 4 + 0] = ((uint32Array[i] >> shift[3]) & 0xFF);
     }
 }
 
 void unpack(u32* uint32Array, const u8* uint8Array) {
     for (int i = 0; i < 8; ++i) {
-        uint32Array[i] = (uint8Array[i * 4 + 3] << 24) |
-                         (uint8Array[i * 4 + 2] << 16) |
-                         (uint8Array[i * 4 + 1] << 8) |
-                          uint8Array[i * 4 + 0];
+        uint32Array[i] = (uint8Array[i * 4 + 3] << shift[0]) |
+                         (uint8Array[i * 4 + 2] << shift[1]) |
+                         (uint8Array[i * 4 + 1] << shift[2]) |
+                          uint8Array[i * 4 + 0] << shift[3];
     }
 }
 #define pack25519 pack
@@ -125,6 +111,8 @@ void fabsolute(field_elem out, field_elem in){
     fneg(out,temp); // out = ~in
     // CT_SWAP if it is neg.
     swap25519(out,temp,is_neg(in));
+
+    WIPE(temp);
 }
 
 
@@ -143,19 +131,59 @@ void pow7(field_elem out, const field_elem a){
     fmul(out,out,a);
 }
 
+void pow_xtimes(field_elem out, const field_elem a, int n){
+  fcopy(out,a);
+  for (int i = 0; i < n; ++i)
+  {
+    pow2(out,out);
+  }
+  
+}
+
 // In previous version of this library we used curve25519_pow_two5mtwo0_two250mtwo0 
 // which was inspired by ristretto_dona: https://github.com/floodyberry/ed25519-donna/blob/master/curve25519-donna-helpers.h
 // Now we use pow2523 instead, which is implementation taken from tweetNaCl and slightly edited due to our field_elem representation.
 // tweetNaCl impl.: https://github.com/dominictarr/tweetnacl/blob/master/tweetnacl.c#L382
-void pow2523(field_elem o, const field_elem i){
-    field_elem c;
-    int a;
-    FOR(a,0,8) c[a]=i[a];
-    for(a=250;a>=0;a--) {
-        pow2(c,c);
-        if(a!=1) fmul(c,c,i);
-    }
-    FOR(a,0,8) o[a]=c[a];
+void curve25519_pow_two5mtwo0_two250mtwo0(field_elem b){
+  field_elem t0,c;
+
+  /* 2^5  - 2^0 */ /* b */
+  /* 2^10 - 2^5 */ pow_xtimes(t0, b, 5);
+  /* 2^10 - 2^0 */ fmul(b, t0, b);
+  /* 2^20 - 2^10 */ pow_xtimes(t0, b, 10);
+  /* 2^20 - 2^0 */ fmul(c, t0, b);
+  /* 2^40 - 2^20 */ pow_xtimes(t0, c, 20);
+  /* 2^40 - 2^0 */ fmul(t0, t0, c);
+  /* 2^50 - 2^10 */ pow_xtimes(t0, t0, 10);
+  /* 2^50 - 2^0 */ fmul(b, t0, b);
+  /* 2^100 - 2^50 */ pow_xtimes(t0, b, 50);
+  /* 2^100 - 2^0 */ fmul(c, t0, b);
+  /* 2^200 - 2^100 */ pow_xtimes(t0, c, 100);
+  /* 2^200 - 2^0 */ fmul(t0, t0, c);
+  /* 2^250 - 2^50 */ pow_xtimes(t0, t0, 50);
+  /* 2^250 - 2^0 */ fmul(b, t0, b);
+
+  WIPE(t0); WIPE(c);
+
+}
+
+// this function calc: 
+// z^((p-5)/8) = z^(2^252 - 3)
+// needed for ristretto255 inv_sqrt
+void curve25519_pow_two252m3(field_elem two252m3, const field_elem z){
+  field_elem b,c,t0;
+
+  /* 2 */ pow_xtimes(c, z, 1); /* c = 2 */
+  /* 8 */ pow_xtimes(t0, c, 2); /* t0 = 8 */
+  /* 9 */ fmul(b, t0, z); /* b = 9 */
+  /* 11 */ fmul(c, b, c); /* c = 11 */
+  /* 22 */ pow_xtimes(t0, c, 1);
+  /* 2^5 - 2^0 = 31 */ fmul(b, t0, b);
+  /* 2^250 - 2^0 */ curve25519_pow_two5mtwo0_two250mtwo0(b);
+  /* 2^252 - 2^2 */ pow_xtimes(b, b, 2);
+  /* 2^252 - 3 */ fmul(two252m3, b, z);
+
+  WIPE(b); WIPE(c); WIPE(t0);
 }
 
 
@@ -188,7 +216,7 @@ static int inv_sqrt(field_elem out,const field_elem u, const field_elem v){
     fmul(nd_bracket,u,v7);                  // (u*v^7)
    
     #define r tmp2
-    pow2523(r,nd_bracket);                  // r = (u*v^7) ^ {(p-5)/8}
+    curve25519_pow_two252m3(r,nd_bracket);                  // r = (u*v^7) ^ {(p-5)/8}
     #define r2 tmp1
     fmul(r2,r,st_bracket);                  // r2 = (u*v^3) * (u*v^7) ^ {(p-5)/8}
     
@@ -229,10 +257,11 @@ static int inv_sqrt(field_elem out,const field_elem u, const field_elem v){
 
     // output
     fcopy(out,r2);
+
+    WIPE(r2); WIPE(u_neg); WIPE(r_negative);
     return was_nonzero_square;
 
 }
-
 
 //#define inv_sqrt curve25519Sqrt
 
@@ -304,6 +333,8 @@ static int MAP(ristretto255_point* ristretto_out, const field_elem t){
     fmul(ristretto_out->z,w1,w3);
     fmul(ristretto_out->t,w0,w2);
 
+    WIPE(ss); WIPE(w2); WIPE(w0);
+    WIPE(w1); WIPE(w3);
     return 0;
 }
 
@@ -311,11 +342,11 @@ static int MAP(ristretto255_point* ristretto_out, const field_elem t){
 
 
 // Ristretto255 point addition (Edward's coords | X,Y,Z,T ) 
-// ge25519_addition is identical to tweetNaCl sv add(gf p[4],gf q[4]),
+// ristretto255_point_addition is identical to tweetNaCl sv add(gf p[4],gf q[4]),
 // Basically I changed name to smth more slef-explaining and chaged gf[4] to our ristretto255_point representation
 // of ristretto points. NOTE: gf is the same as our field_elem (just naming is different)
 // https://github.com/dominictarr/tweetnacl/blob/master/tweetnacl.c#L590
-void ge25519_addition(ristretto255_point* r,const ristretto255_point* p,const ristretto255_point* q){
+void ristretto255_point_addition(ristretto255_point* r,const ristretto255_point* p,const ristretto255_point* q){
     field_elem temp_1,temp_2,temp_3, temp_4, temp_5;
 
     #define a temp_1
@@ -347,13 +378,13 @@ void ge25519_addition(ristretto255_point* r,const ristretto255_point* p,const ri
     #define g temp_3
     fadd(g, d, _c);
 
-    
-    
-
     fmul(r->x, e, f);
     fmul(r->y, h, g);
     fmul(r->z, g, f);
     fmul(r->t, e, h);
+
+    WIPE(d); WIPE(h); WIPE(g);
+    WIPE(f); WIPE(e);
 }
 
 // cswap() => conditional swap, if b is set to 1, then swap 2 ristretto points,
@@ -451,6 +482,9 @@ int ristretto255_decode(ristretto255_point *ristretto_out, const u8 bytes_in[BYT
   fmul(ristretto_out->t,ristretto_out->x,ristretto_out->y);
 
   fcopy(ristretto_out->z, F_ONE);
+
+  WIPE(_s); WIPE(sDx); WIPE(u1);
+  WIPE(Dxv); WIPE(Dy); WIPE(_I);
 
   if (was_square == 0){
     #ifdef DEBUG_FLAG
@@ -555,7 +589,9 @@ int ristretto255_encode(u8 bytes_out[BYTES_ELEM_SIZE], const ristretto255_point*
   
   pack25519(bytes_out,temp_s);
 
-
+  WIPE(enchanted_denominator); WIPE(Z_Y); WIPE(temp_s);
+  WIPE(_X); WIPE(_Y); WIPE(iX);
+  WIPE(iY);
   return 0;
 }
 
@@ -602,10 +638,12 @@ int hash_to_group(u8 bytes_out[BYTES_ELEM_SIZE], const u8 bytes_in[HASH_BYTES_SI
   MAP(a,ft1); // map(ristretto_elligator) first half
   MAP(b,ft2); // map(ristretto_elligator) second hal
 
-  ge25519_addition(r,a,b); // addition of 2 Edward's point
+  ristretto255_point_addition(r,a,b); // addition of 2 Edward's point
 
   ristretto255_encode(bytes_out, r);
 
+  // free a_point, b_point, r_point
+  WIPE_PT(&a_point); WIPE_PT(&b_point); WIPE_PT(&r_point);
   return 0;
 }
 
@@ -620,8 +658,8 @@ void ristretto255_scalarmult(ristretto255_point* p, ristretto255_point* q,const 
   for (int i = 255;i >= 0;--i) {
     u8 b = (s[i/8]>>(i&7))&1;
     cswap(p,q,b);
-    ge25519_addition(q,q,p);
-    ge25519_addition(p,p,p);
+    ristretto255_point_addition(q,q,p);
+    ristretto255_point_addition(p,p,p);
     cswap(p,q,b);
   }
 }

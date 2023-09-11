@@ -14,11 +14,10 @@
 //#include "tweetNaClLib.h"
 #include "curve25519.h"
 #include "modl.h"
+#include "utils.h"
 
-// FUNC_ASSIGN_UINT8_TO_UINT32_POINTER
-#define pack25519(out, in) (*(out) = (uint32_t)(*(in))) 
-// FUNC_ASSIGN_UINT32_TO_UINT8_POINTER
-#define unpack25519(out,in) (*(out) = (uint8_t)(*(in))) 
+#define pack25519 pack
+#define unpack25519 unpack
 
 int main(){
     
@@ -321,10 +320,13 @@ int main(){
     result &= subresult;
     #ifdef VERBOSE_FLAG
     if (!subresult){
+        print_32(r);
             printf("ModL VECTOR TEST : FAILED! Error was found when testing vector for mod L\n");
     }
     else{
         printf("ModL VECTOR TEST: SUCCESS!\n");
+        // d6 61 d1 ae 29 16 1c 60 72 d1 fe 20 73 35 ba 6d 03 8b 34 3a 73 21 c7 cd d1 39 87 fa ed 57 f0 0b
+        print_32(r);
     }
     #endif   
 
@@ -356,6 +358,25 @@ int main(){
         printf("***************************\n");
     }
 
+    #if 0
+    u8 endian_test_8[BYTES_ELEM_SIZE]={
+        0xAB, 0xCD, 0xEF, 0x01, 
+        0x23, 0x45, 0x67, 0x89, 
+        0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00
+    };
+    field_elem endian_test_32 = {0xABCDEF01, 0x23456789, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000};
+
+    pack25519(endian_test_8,endian_test_32);
+    print_32(endian_test_8);
+    
+    unpack25519(endian_test_32,endian_test_8);
+    print(endian_test_32);
+    #endif
 
     return 0;
 }

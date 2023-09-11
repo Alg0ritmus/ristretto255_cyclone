@@ -1,6 +1,18 @@
 #include "helpers.h" // included definition of types like u8, u32... + FOR macros, etc.
 #include "modl.h" 
 
+
+#define WIPE_CTX(ctx)              crypto_wipe(ctx   , sizeof(*(ctx)))
+#define WIPE_BUFFER(buffer)        crypto_wipe(buffer, sizeof(buffer))
+void crypto_wipe(void *secret, size_t size);
+
+void crypto_wipe(void *secret, size_t size)
+{
+    volatile u8 *v_secret = (u8*)secret;
+    size_t idx;
+    ZERO(idx, v_secret, size);
+}
+
 //////////////////
 // MONOCYPHER - needed for efficient calculation of a mod L
 /////////////////
@@ -116,7 +128,7 @@ void mod_l(u8 reduced[32], const u32 x[16]){
     remove_l(xr, xr);
     store32_le_buf(reduced, xr, 8);
 
-//  WIPE_BUFFER(xr);
+    WIPE_BUFFER(xr);
 }
 
 /********************* MD *******************************************************************/
@@ -149,4 +161,175 @@ void inverse_mod_l(u8 out[BYTES_ELEM_SIZE], const u8 in[BYTES_ELEM_SIZE]){
     }
     int i;
     COPY(i ,out, (u8*) m_inv, BYTES_ELEM_SIZE);
+}
+
+
+// ADDED - Montgomery -> PZ
+
+static u32 load32_le(const u8 s[4])
+{
+    return
+        ((u32)s[0] <<  0) |
+        ((u32)s[1] <<  8) |
+        ((u32)s[2] << 16) |
+        ((u32)s[3] << 24);
+}
+
+static void load32_le_buf (u32 *dst, const u8 *src, size_t size) {
+    size_t i;
+    FOR(i, 0, size) { dst[i] = load32_le(src + i*4); }
+}
+
+// trim a scalar for scalar multiplication
+void crypto_eddsa_trim_scalar(u8 out[32], const u8 in[32])
+{
+
+    int i;
+    COPY(i, out, in, 32);
+    out[ 0] &= 248;
+    out[31] &= 127;
+    out[31] |= 64;
+}
+
+///////////////////////
+/// Scalar division ///
+///////////////////////
+
+// Montgomery reduction.
+// Divides x by (2^256), and reduces the result modulo L
+//
+// Precondition:
+//   x < L * 2^256
+// Constants:
+//   r = 2^256                 (makes division by r trivial)
+//   k = (r * (1/r) - 1) // L  (1/r is computed modulo L   )
+// Algorithm:
+//   s = (x * k) % r
+//   t = x + s*L      (t is always a multiple of r)
+//   u = (t/r) % L    (u is always below 2*L, conditional subtraction is enough)
+static void redc(u32 u[8], u32 x[16])
+{
+    static const u32 k[8] = {
+        0x12547e1b, 0xd2b51da3, 0xfdba84ff, 0xb1a206f2,
+        0xffa36bea, 0x14e75438, 0x6fe91836, 0x9db6c6f2,
+    };
+
+    // s = x * k (modulo 2^256)
+    // This is cheaper than the full multiplication.
+    u32 s[8] = {0};
+    size_t idx;
+    
+    FOR (idx, 0, 8) {
+        u64 carry = 0;
+        size_t jdx;
+        FOR (jdx, 0, 8-idx) {
+            carry  += s[idx+jdx] + (u64)x[idx] * k[jdx];
+            s[idx+jdx]  = (u32)carry;
+            carry >>= 32;
+        }
+    }
+    u32 t[16] = {0};
+    multiply(t, s, L);
+
+    // t = t + x
+    size_t index;
+    u64 carry = 0;
+    FOR (index, 0, 16) {
+        carry  += (u64)t[index] + x[index];
+        t[index]    = (u32)carry;
+        carry >>= 32;
+    }
+
+    // u = (t / 2^256) % L
+    // Note that t / 2^256 is always below 2*L,
+    // So a constant time conditional subtraction is enough
+    remove_l(u, t+8);
+
+    WIPE_BUFFER(s);
+    WIPE_BUFFER(t);
+}
+
+
+// s + (x*L) % 8*L
+// Guaranteed to fit in 256 bits iff s fits in 255 bits.
+//   L             < 2^253
+//   x%8           < 2^3
+//   L * (x%8)     < 2^255
+//   s             < 2^255
+//   s + L * (x%8) < 2^256
+static void add_xl(u8 s[32], u8 x)
+{
+    u64 mod8  = x & 7;
+    u64 carry = 0;
+    size_t idx;
+    FOR (idx , 0, 8) {
+        carry = carry + load32_le(s + 4*idx) + L[idx] * mod8;
+        store32_le(s + 4*idx, (u32)carry);
+        carry >>= 32;
+    }
+}
+
+void crypto_modl_inverse(u8 out[BYTES_ELEM_SIZE], const u8 in[BYTES_ELEM_SIZE])
+{
+    static const  u8 Lm2[32] = { // L - 2
+        0xeb, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58,
+        0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
+    };
+    // 1 in Montgomery form
+    u32 m_inv [8] = {
+        0x8d98951d, 0xd6ec3174, 0x737dcf70, 0xc6ef5bf4,
+        0xfffffffe, 0xffffffff, 0xffffffff, 0x0fffffff,
+    };
+
+    crypto_eddsa_trim_scalar(out, in);
+
+    // Convert the scalar in Montgomery form
+    // m_scl = scalar * 2^256 (modulo L)
+    u32 m_scl[8];
+    {
+        size_t i;
+        u32 tmp[16];
+        ZERO(i, tmp, 8);
+        load32_le_buf(tmp+8, out, 8);
+        mod_l(out, tmp);
+        load32_le_buf(m_scl, out, 8);
+        WIPE_BUFFER(tmp); // Wipe ASAP to save stack space
+    }
+
+    // Compute the inverse
+    u32 product[16];
+    
+
+    for (int i = 252; i >= 0; i--) {
+        size_t jdx;
+        ZERO(jdx, product, 16);
+        multiply(product, m_inv, m_inv);
+        redc(m_inv, product);
+        if (scalar_bit(Lm2, i)) {
+            size_t jdnx; 
+            ZERO(jdnx, product, 16);
+            multiply(product, m_inv, m_scl);
+            redc(m_inv, product);
+        }
+    }
+    // Convert the inverse *out* of Montgomery form
+    // scalar = m_inv / 2^256 (modulo L)
+    size_t jdx1;
+    size_t jdx2;
+    COPY(jdx1, product, m_inv, 8);
+    ZERO(jdx2, product + 8, 8);
+    redc(m_inv, product);
+    store32_le_buf(out, m_inv, 8); // the *inverse* of the scalar
+
+    // Clear the cofactor of scalar:
+    //   cleared = scalar * (3*L + 1)      (modulo 8*L)
+    //   cleared = scalar + scalar * 3 * L (modulo 8*L)
+    // Note that (scalar * 3) is reduced modulo 8, so we only need the
+    // first byte.
+    add_xl(out, out[0] * 3);
+
+    WIPE_BUFFER(m_scl);
+    WIPE_BUFFER(product);  WIPE_BUFFER(m_inv);
 }

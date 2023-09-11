@@ -71,19 +71,16 @@ static const field_elem F_ZERO = {0x00000000, 0x00000000, 0x00000000, 0x00000000
     SQRT_AD_MINUS_ONE = {0x497B2E1B, 0x7E97F6A0, 0x1B7854BD, 0xAF9D8E0C, 0x31F5D1FD, 0x0F3CFCC9, 0x2B8348AC, 0x376931BF};
 
 //Curve25519 related functions
-void curve25519SetInt(uint32_t *a, uint32_t b);
+
 void curve25519Add(uint32_t *r, const uint32_t *a, const uint32_t *b);
-void curve25519AddInt(uint32_t *r, const uint32_t *a, uint32_t b);
+
 void curve25519Sub(uint32_t *r, const uint32_t *a, const uint32_t *b);
-void curve25519SubInt(uint32_t *r, const uint32_t *a, uint32_t b);
+
 void curve25519Mul(uint32_t *r, const uint32_t *a, const uint32_t *b);
-void curve25519MulInt(uint32_t *r, const uint32_t *a, uint32_t b);
+
 void curve25519Red(uint32_t *r, const uint32_t *a);
 void curve25519Sqr(uint32_t *r, const uint32_t *a);
-void curve25519Pwr2(uint32_t *r, const uint32_t *a, uint_t n);
-void curve25519Inv(uint32_t *r, const uint32_t *a);
 
-uint32_t curve25519Sqrt(uint32_t *r, const uint32_t *a, const uint32_t *b);
 
 void curve25519Copy(uint32_t *a, const uint32_t *b);
 void curve25519Swap(uint32_t *a, uint32_t *b, uint32_t c);
@@ -92,9 +89,6 @@ void curve25519Select(uint32_t *r, const uint32_t *a, const uint32_t *b,
    uint32_t c);
 
 uint32_t curve25519Comp(const uint32_t *a, const uint32_t *b);
-
-void curve25519Import(uint32_t *a, uint8_t *data);
-void curve25519Export(uint32_t *a, uint8_t *data);
 
 //C++ guard
 #ifdef __cplusplus

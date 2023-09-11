@@ -12,5 +12,7 @@ void fneg(field_elem out, field_elem in);
 int is_neg(field_elem in);
 int is_neg_bytes(const u8 in[BYTES_ELEM_SIZE]);
 void fabsolute(field_elem out, field_elem in);
+void pack(u8* uint8Array,const u32* uint32ArrayIn);
+void unpack(u32* uint32Array, const u8* uint8Array);
 
 #endif //_RISTRETTO255_H
