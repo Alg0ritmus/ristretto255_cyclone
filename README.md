@@ -2,6 +2,9 @@
 C - `comp.bat`(windows) <br>
 # Progress:
 
+## 18.9.2023
+Pridany pokec + zabudol som na MEMORY ALLOCATION kt. bude pridane v dalsej verzii dokumentu spolu s pripadnymi opravami.<br>
+
 ## 17.9.2023
 Precisteny kod + premenovane subory/funkcie. <br>
 Vyhodena donna impl. pre `pow2523` ako aj stara impl. `inv_sqrt`.<br>
