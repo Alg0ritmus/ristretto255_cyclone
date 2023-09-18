@@ -1,4 +1,3 @@
-#include "helpers.h" // included definition of types like u8, u32... + FOR macros, etc.
 #include "modl.h" 
 
 
@@ -180,17 +179,6 @@ static void load32_le_buf (u32 *dst, const u8 *src, size_t size) {
     FOR(i, 0, size) { dst[i] = load32_le(src + i*4); }
 }
 
-// trim a scalar for scalar multiplication
-void crypto_eddsa_trim_scalar(u8 out[32], const u8 in[32])
-{
-
-    int i;
-    COPY(i, out, in, 32);
-    out[ 0] &= 248;
-    out[31] &= 127;
-    out[31] |= 64;
-}
-
 ///////////////////////
 /// Scalar division ///
 ///////////////////////
@@ -249,27 +237,7 @@ static void redc(u32 u[8], u32 x[16])
     WIPE_BUFFER(t);
 }
 
-
-// s + (x*L) % 8*L
-// Guaranteed to fit in 256 bits iff s fits in 255 bits.
-//   L             < 2^253
-//   x%8           < 2^3
-//   L * (x%8)     < 2^255
-//   s             < 2^255
-//   s + L * (x%8) < 2^256
-static void add_xl(u8 s[32], u8 x)
-{
-    u64 mod8  = x & 7;
-    u64 carry = 0;
-    size_t idx;
-    FOR (idx , 0, 8) {
-        carry = carry + load32_le(s + 4*idx) + L[idx] * mod8;
-        store32_le(s + 4*idx, (u32)carry);
-        carry >>= 32;
-    }
-}
-
-void crypto_modl_inverse(u8 out[BYTES_ELEM_SIZE], const u8 in[BYTES_ELEM_SIZE])
+void crypto_x25519_inverse(u8 out[BYTES_ELEM_SIZE], const u8 in[BYTES_ELEM_SIZE])
 {
     static const  u8 Lm2[32] = { // L - 2
         0xeb, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58,
@@ -283,8 +251,6 @@ void crypto_modl_inverse(u8 out[BYTES_ELEM_SIZE], const u8 in[BYTES_ELEM_SIZE])
         0xfffffffe, 0xffffffff, 0xffffffff, 0x0fffffff,
     };
 
-    crypto_eddsa_trim_scalar(out, in);
-
     // Convert the scalar in Montgomery form
     // m_scl = scalar * 2^256 (modulo L)
     u32 m_scl[8];
@@ -292,7 +258,7 @@ void crypto_modl_inverse(u8 out[BYTES_ELEM_SIZE], const u8 in[BYTES_ELEM_SIZE])
         size_t i;
         u32 tmp[16];
         ZERO(i, tmp, 8);
-        load32_le_buf(tmp+8, out, 8);
+        load32_le_buf(tmp+8, in, 8);
         mod_l(out, tmp);
         load32_le_buf(m_scl, out, 8);
         WIPE_BUFFER(tmp); // Wipe ASAP to save stack space
@@ -322,13 +288,6 @@ void crypto_modl_inverse(u8 out[BYTES_ELEM_SIZE], const u8 in[BYTES_ELEM_SIZE])
     ZERO(jdx2, product + 8, 8);
     redc(m_inv, product);
     store32_le_buf(out, m_inv, 8); // the *inverse* of the scalar
-
-    // Clear the cofactor of scalar:
-    //   cleared = scalar * (3*L + 1)      (modulo 8*L)
-    //   cleared = scalar + scalar * 3 * L (modulo 8*L)
-    // Note that (scalar * 3) is reduced modulo 8, so we only need the
-    // first byte.
-    add_xl(out, out[0] * 3);
 
     WIPE_BUFFER(m_scl);
     WIPE_BUFFER(product);  WIPE_BUFFER(m_inv);

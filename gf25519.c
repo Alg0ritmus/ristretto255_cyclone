@@ -1,7 +1,28 @@
-// 20230627 MD, upravene pre samostatnu kompilaciu 
+// **********************************************************************************
+// -----------------------------TECHNICAL UNIVERSITY OF KOSICE-----------------------
+// ------------------- FACULTY OF ELECTRICAL ENGINEERING AND INFORMATICS-------------
+// --------------------- THIS CODE IS A PART OF A MASTER'S THESIS -------------------
+// -------------------------------------Master thesis--------------------------------
+// ----------------------------Patrik Zelenak & Milos Drutarovsky--------------------
+// --------------------------------------version 0.1---------------------------------
+// **********************************************************************************
 
 /**
-  * @file curve25519.c
+  * SOME WORDS:
+  * This file represents an excerpt of code from the cryptographic
+  * library Cyclone. None of this code has been edited;
+  * the only change from the original code is the renaming of functions
+  * that I extracted. You can see the original naming as well as the URL
+  * to the function implementation above each function. We chose the Cyclone
+  * crypto library because of its advantages, such as compactness and speed,
+  * eliminating the need for I/O conversion. In other words, we do not need to perform
+  * any conversion, such as pack/unpack or from_bytes/to_bytes, as required by other
+  * libraries like TweetNaCl or MonoCypher. We also appreciate the maintenance of the Cyclone library,
+  * so we are using the latest version, 2.3.0, released on June 12, 2023.
+**/
+
+/**
+  * @file gf25519.c
   * @brief Curve25519 elliptic curve (constant-time implementation)
   *
   * @section License
@@ -30,22 +51,10 @@
   * @version 2.3.0
   **/
   
- //Switch to the appropriate trace level
- #define TRACE_LEVEL CRYPTO_TRACE_LEVEL
   
- #include <string.h>
-
-
  //Dependencies
-// #include "core/crypto.h"
-// #include "ecc/ec_curves.h"
- #include "curve25519.h"
-// #include "debug.h"
-  
-
-// MD
-//# define htole32(x) (x)
-//# define letoh32(x) (x)
+ #include "gf25519.h"
+ 
 
  /**
   * @brief Modular addition
@@ -54,7 +63,9 @@
   * @param[in] b An integer such as 0 <= B < p
   **/
   
- void curve25519Add(uint32_t *r, const uint32_t *a, const uint32_t *b)
+ // Original name: curve25519Add
+ // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L79C6-L79C19
+ void gf25519Add(uint32_t *r, const uint32_t *a, const uint32_t *b)
  {
     uint_t i;
     uint64_t temp;
@@ -69,7 +80,7 @@
     }
   
     //Perform modular reduction
-    curve25519Red(r, r);
+    gf25519Red(r, r);
  }
    
   
@@ -80,7 +91,9 @@
   * @param[in] b An integer such as 0 <= B < p
   **/
   
- void curve25519Sub(uint32_t *r, const uint32_t *a, const uint32_t *b)
+ // Original name: curve25519Sub
+ // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L130
+ void gf25519Sub(uint32_t *r, const uint32_t *a, const uint32_t *b)
  {
     uint_t i;
     int64_t temp;
@@ -98,7 +111,7 @@
     r[7] += 0x80000000;
   
     //Perform modular reduction
-    curve25519Red(r, r);
+    gf25519Red(r, r);
  }
   
   
@@ -110,7 +123,9 @@
   * @param[in] b An integer such as 0 <= B < p
   **/
   
- void curve25519Mul(uint32_t *r, const uint32_t *a, const uint32_t *b)
+ // Original name: curve25519Mul
+ // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L191 
+ void gf25519Mul(uint32_t *r, const uint32_t *a, const uint32_t *b)
  {
     uint_t i;
     uint_t j;
@@ -185,7 +200,7 @@
     }
   
     //Reduce non-canonical values
-    curve25519Red(r, u);
+    gf25519Red(r, u);
  }
 
   
@@ -195,11 +210,13 @@
   * @param[out] r Resulting integer R = (A ^ 2) mod p
   * @param[in] a An integer such as 0 <= A < p
   **/
-  
- void curve25519Sqr(uint32_t *r, const uint32_t *a)
+ 
+ // Original name: curve25519Sqr
+ // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L317C18-L317C31
+ void gf25519Sqr(uint32_t *r, const uint32_t *a)
  {
     //Compute R = (A ^ 2) mod p
-    curve25519Mul(r, a, a);
+    gf25519Mul(r, a, a);
  }
   
   
@@ -209,18 +226,20 @@
   * @param[in] a An integer such as 0 <= A < p
   * @param[in] n An integer such as n >= 1
   **/
-  
- void curve25519Pwr2(uint32_t *r, const uint32_t *a, uint_t n)
+ 
+ // Original name: curve25519Pwr2
+ // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L331
+ void gf25519Pwr2(uint32_t *r, const uint32_t *a, uint_t n)
  {
     uint_t i;
   
     //Pre-compute (A ^ 2) mod p
-    curve25519Sqr(r, a);
+    gf25519Sqr(r, a);
   
     //Compute R = (A ^ (2^n)) mod p
     for(i = 1; i < n; i++)
     {
-       curve25519Sqr(r, r);
+       gf25519Sqr(r, r);
     }
  }
   
@@ -230,8 +249,10 @@
   * @param[out] r Resulting integer R = A mod p
   * @param[in] a An integer such as 0 <= A < (2 * p)
   **/
-  
- void curve25519Red(uint32_t *r, const uint32_t *a)
+ 
+ // Original name: curve25519Red
+ // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L352
+ void gf25519Red(uint32_t *r, const uint32_t *a)
  {
     uint_t i;
     uint64_t temp;
@@ -249,7 +270,7 @@
     b[7] -= 0x80000000;
   
     //If B < (2^255 - 19) then R = B, else R = A
-    curve25519Select(r, b, a, (b[7] & 0x80000000) >> 31);
+    gf25519Select(r, b, a, (b[7] & 0x80000000) >> 31);
  }
     
   
@@ -258,8 +279,10 @@
   * @param[out] a Pointer to the destination integer
   * @param[in] b Pointer to the source integer
   **/
-  
- void curve25519Copy(uint32_t *a, const uint32_t *b)
+ 
+ // Original name: curve25519Copy
+ // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L515
+ void gf25519Copy(uint32_t *a, const uint32_t *b)
  {
     uint_t i;
   
@@ -277,8 +300,10 @@
   * @param[in,out] b Pointer to the second integer
   * @param[in] c Condition variable
   **/
-  
- void curve25519Swap(uint32_t *a, uint32_t *b, uint32_t c)
+
+ // Original name: curve25519Swap
+ // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L534
+ void gf25519Swap(uint32_t *a, uint32_t *b, uint32_t c)
  {
     uint_t i;
     uint32_t mask;
@@ -306,7 +331,9 @@
   * @param[in] c Condition variable
   **/
   
- void curve25519Select(uint32_t *r, const uint32_t *a, const uint32_t *b,
+ // Original name: curve25519Select
+ // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L562
+ void gf25519Select(uint32_t *r, const uint32_t *a, const uint32_t *b,
     uint32_t c)
  {
     uint_t i;
@@ -330,8 +357,10 @@
   * @param[in] b Pointer to the second integer
   * @return The function returns 0 if the A = B, else 1
   **/
-  
- uint32_t curve25519Comp(const uint32_t *a, const uint32_t *b)
+ 
+ // Original name: curve25519Comp
+ // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L587
+ uint32_t gf25519Comp(const uint32_t *a, const uint32_t *b)
  {
     uint_t i;
     uint32_t mask;
@@ -346,7 +375,7 @@
        mask |= a[i] ^ b[i];
     }
   
-    //Return 0 if A = B, else 1
+    //Return 0 if A = B, else 1, NOTE: that we need reversed logic in ristretto.c for our needs
     return (((uint32_t) (mask | (~mask + 1))) >> 31); 
  }
-  
+

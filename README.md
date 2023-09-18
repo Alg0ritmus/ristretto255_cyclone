@@ -2,6 +2,24 @@
 C - `comp.bat`(windows) <br>
 # Progress:
 
+## 17.9.2023
+Precisteny kod + premenovane subory/funkcie. <br>
+Vyhodena donna impl. pre `pow2523` ako aj stara impl. `inv_sqrt`.<br>
+Pridana nova impl. `inv_sqr` inspirovana kniznicou cyclone.<br>
+Upraveny prepinac pre big/little endian. <br>
+Upravena `crypto_modl_inverse` na jej funkcnu verziu.<br>
+Pridany prepinac na podmienenu kompilaciu modl bud to pomocou<br>
+Barretovej redukcie alebo Montgomeryho. <br>
+Doplnenie komentarov ku kodom. <br>
+<br>
+
+---
+## Mozno stoji za uvahu
+Je vazne potrebne vyuzivat `gf25519Swap` a aj `gf25519Select` z cyclonu? Vhodnym nahradenim by nam malo stacit pouzit `gf25519Swap`  (vice versa) a tym by sme zmensili velkost zdrojaku. Ma to ale zmysel? Ak by sme isli tymto smerom, ktora funkcia je pre nas vyhodnejsia?
+
+
+
+
 ## 11.9.2023
 Vyhodene nepotrebne funkcie zo cyclone.<br>
 Pridana vypoctovo vyhodnejsia donna impl. pre pow2523.<br>

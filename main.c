@@ -4,15 +4,22 @@
 // --------------------- THIS CODE IS A PART OF A MASTER'S THESIS -------------------
 // -------------------------------------Master thesis--------------------------------
 // ----------------------------Patrik Zelenak & Milos Drutarovsky--------------------
-// --------------------------------------version X.X---------------------------------
-// ********************************************************************************/
+// --------------------------------------version 0.1---------------------------------
+// **********************************************************************************
+
+/**
+  * This file serves as test file for our implementation of ristretto255.
+  * In our impl. of Ristretto255 we uses Cyclone crypto library for internal calculation
+  * in GF(2^255-19). While construction our code, we followed by latest ristretto draft
+  * (https://datatracker.ietf.org/doc/draft-hdevalence-cfrg-ristretto/). ALL ristretto 
+  * related test vectors are taken from draft above. Test file also includes test for 
+  * modular inverse (mod L) taken from MonoCypher. 
+**/
 
 
-// -Wno-unused-value
 #include "helpers.h"
 #include "ristretto255.h"
-//#include "tweetNaClLib.h"
-#include "curve25519.h"
+#include "gf25519.h"
 #include "modl.h"
 #include "utils.h"
 
@@ -312,21 +319,21 @@ int main(){
        }
 
        for (k=0; k< 10; k++) {
-    //  vypocet inverzie
-          inverse_mod_l(r, iner);
+    //  calc of inverse
+          modl_l_inverse(r, iner);
        }    
 
     subresult = bytes_eq_32(r, modL_test_vec); // returns 1 if two are eq
     result &= subresult;
     #ifdef VERBOSE_FLAG
     if (!subresult){
-        print_32(r);
+        //print_32(r);
             printf("ModL VECTOR TEST : FAILED! Error was found when testing vector for mod L\n");
     }
     else{
         printf("ModL VECTOR TEST: SUCCESS!\n");
         // d6 61 d1 ae 29 16 1c 60 72 d1 fe 20 73 35 ba 6d 03 8b 34 3a 73 21 c7 cd d1 39 87 fa ed 57 f0 0b
-        print_32(r);
+        //print_32(r);
     }
     #endif   
 
@@ -357,26 +364,6 @@ int main(){
         printf("ALL TESTS RAN SUCCESSFULLY!\n");
         printf("***************************\n");
     }
-
-    #if 0
-    u8 endian_test_8[BYTES_ELEM_SIZE]={
-        0xAB, 0xCD, 0xEF, 0x01, 
-        0x23, 0x45, 0x67, 0x89, 
-        0x00, 0x00, 0x00, 0x00, 
-        0x00, 0x00, 0x00, 0x00, 
-        0x00, 0x00, 0x00, 0x00, 
-        0x00, 0x00, 0x00, 0x00, 
-        0x00, 0x00, 0x00, 0x00, 
-        0x00, 0x00, 0x00, 0x00
-    };
-    field_elem endian_test_32 = {0xABCDEF01, 0x23456789, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000};
-
-    pack25519(endian_test_8,endian_test_32);
-    print_32(endian_test_8);
-    
-    unpack25519(endian_test_32,endian_test_8);
-    print(endian_test_32);
-    #endif
 
     return 0;
 }
