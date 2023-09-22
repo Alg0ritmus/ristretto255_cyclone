@@ -1,10 +1,74 @@
+// ******************************************************************
+// ----------------- TECHNICAL UNIVERSITY OF KOSICE -----------------
+// ---Department of Electronics and Multimedia Telecommunications ---
+// -------- FACULTY OF ELECTRICAL ENGINEERING AND INFORMATICS -------
+// ------------ THIS CODE IS A PART OF A MASTER'S THESIS ------------
+// ------------------------- Master thesis --------------------------
+// -----------------Patrik Zelenak & Milos Drutarovsky --------------
+// ---------------------------version 0.1.1 -------------------------
+// --------------------------- 21-09-2023 ---------------------------
+// ******************************************************************
+
+/**
+  * This file includes 3 functions taken from crypto library 
+  * MonoCypher. We extracted and  slightly edited functions
+  * that perform modular inverse (arithmetic modulo L). 
+  * These functions are suitable for creation of other protocols 
+  * like OPAQUE etc. 
+  *
+  * Note that mod_l() are build on Barrett reduction which
+  * is used later in inverse_mod_l(); which can be suboptimal,
+  * even though we reuse temp. space on stack. More efficient way
+  * (in some cases, see modl.h) is to use Montgomery reduction.
+  * Due to efficieny we slightly edited crypto_x25519_inverse()
+  * to perform Montgomery reduction. 
+  * 
+  * NOTE: Extracted and edited code is functional only on 
+  * Litle Endian architecture (at least for now)!
+**/
+
 #include "modl.h" 
 
-
-#define WIPE_CTX(ctx)              crypto_wipe(ctx   , sizeof(*(ctx)))
+// The macro WIPE_BUFFER is used throughout this file,
+// and it employs the crypto_wipe function (defined below)
+// to securely erase input data.
 #define WIPE_BUFFER(buffer)        crypto_wipe(buffer, sizeof(buffer))
-void crypto_wipe(void *secret, size_t size);
 
+/**
+  * In the context of a crypto library, using volatile to prevent the
+  * compiler from optimizing out memory zeroing is a safety 
+  * precaution. Crypto libraries often deal with sensitive data,
+  * and ensuring that memory is securely wiped (zeroed) is a critical
+  * security requirement to prevent data leakage.
+  *
+  * The compiler's optimization may decide to skip the zeroing
+  * operation if it believes the memory is never read afterward.
+  * By using volatile, you're essentially telling the compiler
+  * not to make that assumption and to perform the zeroing operation
+  * regardless of whether the memory is explicitly read afterward.
+  * This helps ensure that sensitive data is properly wiped from 
+  * memory, which is crucial for security purposes.
+  *
+  * In other words, we need to use volatile because the compiler
+  * might skip zeroing the buffer due to optimization and make the
+  * assumption that 'why would I write into the buffer when it
+  * is never read.'
+  *
+  * One more comment on volatile keyword:
+  * The 'volatile' keyword is used to indicate to the compiler that
+  * a variable or object can change its value at any time without any
+  * action being taken by the code the compiler finds nearby. 
+  * This is typically used to prevent the compiler from optimizing
+  * away certain accesses to memory, especially in cases where 
+  * the memory might be modified by hardware, another thread,
+  * or some other external entity that the compiler cannot predict.
+  *
+  * Last but not least, the difference between volatile on a pointer
+  * and volatile on a variable is that volatile on a pointer indicates
+  * that the data being pointed to may change,
+  * while volatile on a variable indicates that the variable itself
+  * may change at any time.
+**/
 void crypto_wipe(void *secret, size_t size)
 {
     volatile u8 *v_secret = (u8*)secret;
@@ -130,8 +194,9 @@ void mod_l(u8 reduced[32], const u32 x[16]){
     WIPE_BUFFER(xr);
 }
 
-/********************* MD *******************************************************************/
-// !!! fnkcne len na CPU s Litle Endian architekturou!!! Pre Big Endian treba doplnit kopirovanie dat!!!
+/********************* WARNING ********************************/
+// Functional only on CPU with Little Endian architecture!
+// Feature for Big Endian architecture is not implemented (yet). 
 static void multiply_mod_l(u32 r[8], const u32 a[8], const u32 b[8]){
     u32 c[16] = {0};
         multiply(c, a, b);
@@ -163,7 +228,9 @@ void inverse_mod_l(u8 out[BYTES_ELEM_SIZE], const u8 in[BYTES_ELEM_SIZE]){
 }
 
 
-// ADDED - Montgomery -> PZ
+// MONTGOMERY implementation of modular inverse (mod l).
+// More efficient in some ways (). See modl.h
+#ifdef MONTGOMERY_MODL_INVERSE_FLAG
 
 static u32 load32_le(const u8 s[4])
 {
@@ -178,6 +245,7 @@ static void load32_le_buf (u32 *dst, const u8 *src, size_t size) {
     size_t i;
     FOR(i, 0, size) { dst[i] = load32_le(src + i*4); }
 }
+
 
 ///////////////////////
 /// Scalar division ///
@@ -237,6 +305,7 @@ static void redc(u32 u[8], u32 x[16])
     WIPE_BUFFER(t);
 }
 
+
 void crypto_x25519_inverse(u8 out[BYTES_ELEM_SIZE], const u8 in[BYTES_ELEM_SIZE])
 {
     static const  u8 Lm2[32] = { // L - 2
@@ -292,3 +361,4 @@ void crypto_x25519_inverse(u8 out[BYTES_ELEM_SIZE], const u8 in[BYTES_ELEM_SIZE]
     WIPE_BUFFER(m_scl);
     WIPE_BUFFER(product);  WIPE_BUFFER(m_inv);
 }
+#endif

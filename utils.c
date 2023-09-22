@@ -13,7 +13,6 @@
 **/
 
 // Dependencies
-#include "helpers.h"
 #include "utils.h"
 
 // inspired by Monocypher's crypto_wipe

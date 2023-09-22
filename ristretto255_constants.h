@@ -1,19 +1,22 @@
-// **********************************************************************************
-// -----------------------------TECHNICAL UNIVERSITY OF KOSICE-----------------------
-// ------------------- FACULTY OF ELECTRICAL ENGINEERING AND INFORMATICS-------------
-// --------------------- THIS CODE IS A PART OF A MASTER'S THESIS -------------------
-// -------------------------------------Master thesis--------------------------------
-// ----------------------------Patrik Zelenak & Milos Drutarovsky--------------------
-// --------------------------------------version 0.1---------------------------------
-// **********************************************************************************
+// ******************************************************************
+// ----------------- TECHNICAL UNIVERSITY OF KOSICE -----------------
+// ---Department of Electronics and Multimedia Telecommunications ---
+// -------- FACULTY OF ELECTRICAL ENGINEERING AND INFORMATICS -------
+// ------------ THIS CODE IS A PART OF A MASTER'S THESIS ------------
+// ------------------------- Master thesis --------------------------
+// -----------------Patrik Zelenak & Milos Drutarovsky --------------
+// ---------------------------version 0.1.1 -------------------------
+// --------------------------- 21-09-2023 ---------------------------
+// ******************************************************************
 
 /**
-  * This file contains all constants used in our ristretto255 implementation.
-  * All of the constants are taken from official taken from ristretto draft:
+  * This file contains all constants used in our ristretto255
+  * implementation. All of the constants are taken from official
+  * taken from ristretto draft:
   * https://datatracker.ietf.org/doc/draft-hdevalence-cfrg-ristretto/
-  * and converted in suitable for our internal 8-word field_elem representation of
-  * GF(2^255-19) element. To get more information on field_elem repr. please
-  * check `helpers.h`
+  * and converted in suitable for our internal 8-word field_elem
+  * representation of GF(2^255-19) element. To get more information
+  * on field_elem repr. please check `helpers.h`
 **/
 
 #ifndef _RISTRETTO255_CONSTANTS_H

@@ -1,27 +1,33 @@
-// **********************************************************************************
-// -----------------------------TECHNICAL UNIVERSITY OF KOSICE-----------------------
-// ------------------- FACULTY OF ELECTRICAL ENGINEERING AND INFORMATICS-------------
-// --------------------- THIS CODE IS A PART OF A MASTER'S THESIS -------------------
-// -------------------------------------Master thesis--------------------------------
-// ----------------------------Patrik Zelenak & Milos Drutarovsky--------------------
-// --------------------------------------version 0.1---------------------------------
-// **********************************************************************************
+// ******************************************************************
+// ----------------- TECHNICAL UNIVERSITY OF KOSICE -----------------
+// ---Department of Electronics and Multimedia Telecommunications ---
+// -------- FACULTY OF ELECTRICAL ENGINEERING AND INFORMATICS -------
+// ------------ THIS CODE IS A PART OF A MASTER'S THESIS ------------
+// ------------------------- Master thesis --------------------------
+// -----------------Patrik Zelenak & Milos Drutarovsky --------------
+// ---------------------------version 0.1.1 -------------------------
+// --------------------------- 21-09-2023 ---------------------------
+// ******************************************************************
 
 /**
-  * This file serves as test file for our implementation of ristretto255.
-  * In our impl. of Ristretto255 we uses Cyclone crypto library for internal calculation
-  * in GF(2^255-19). While construction our code, we followed by latest ristretto draft
-  * (https://datatracker.ietf.org/doc/draft-hdevalence-cfrg-ristretto/). ALL ristretto 
-  * related test vectors are taken from draft above. Test file also includes test for 
-  * modular inverse (mod L) taken from MonoCypher. 
+  * This file serves as a test file for our implementation of 
+  * ristretto255. In our impl. of Ristretto255 we use Cyclone crypto
+  * library for internal calculation in GF(2^255-19). While 
+  * constructing our code, we followed latest version of ristretto 
+  * draft (https://datatracker.ietf.org/doc/draft-hdevalence-cfrg-ristretto/).
+  * All ristretto related test vectors are taken from draft above. 
+  * Test file also includes test for modular inverse (mod L) 
+  * taken from MonoCypher. Note that modular inverse can be performed
+  * in 2 ways; 
+  * using Barrett reduction - `inverse_mod_l()` or more efficient
+  * Montgomery reduction - `crypto_x25519_inverse() `.
+  * 
 **/
 
 
-#include "helpers.h"
 #include "ristretto255.h"
 #include "gf25519.h"
 #include "modl.h"
-#include "utils.h"
 
 #define pack25519 pack
 #define unpack25519 unpack

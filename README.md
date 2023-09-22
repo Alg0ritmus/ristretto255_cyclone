@@ -2,6 +2,17 @@
 C - `comp.bat`(windows) <br>
 # Progress:
 
+
+
+## 22.9.2023
+Nedokoncene!!!
+Spravil som basic makefile + nahradil select swapom
+Musim dopisat pokec ku config.h
+Dopisat commenty podls RFC + docistit kod
+
+
+prestuduj OPAQUE
+
 ## 18.9.2023
 Pridany pokec + zabudol som na MEMORY ALLOCATION kt. bude pridane v dalsej verzii dokumentu spolu s pripadnymi opravami.<br>
 

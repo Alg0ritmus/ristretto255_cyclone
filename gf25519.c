@@ -1,24 +1,37 @@
-// **********************************************************************************
-// -----------------------------TECHNICAL UNIVERSITY OF KOSICE-----------------------
-// ------------------- FACULTY OF ELECTRICAL ENGINEERING AND INFORMATICS-------------
-// --------------------- THIS CODE IS A PART OF A MASTER'S THESIS -------------------
-// -------------------------------------Master thesis--------------------------------
-// ----------------------------Patrik Zelenak & Milos Drutarovsky--------------------
-// --------------------------------------version 0.1---------------------------------
-// **********************************************************************************
+// ******************************************************************
+// ----------------- TECHNICAL UNIVERSITY OF KOSICE -----------------
+// ---Department of Electronics and Multimedia Telecommunications ---
+// -------- FACULTY OF ELECTRICAL ENGINEERING AND INFORMATICS -------
+// ------------ THIS CODE IS A PART OF A MASTER'S THESIS ------------
+// ------------------------- Master thesis --------------------------
+// -----------------Patrik Zelenak & Milos Drutarovsky --------------
+// ---------------------------version 0.1.1 -------------------------
+// --------------------------- 21-09-2023 ---------------------------
+// ******************************************************************
 
 /**
-  * SOME WORDS:
   * This file represents an excerpt of code from the cryptographic
   * library Cyclone. None of this code has been edited;
-  * the only change from the original code is the renaming of functions
-  * that I extracted. You can see the original naming as well as the URL
-  * to the function implementation above each function. We chose the Cyclone
-  * crypto library because of its advantages, such as compactness and speed,
-  * eliminating the need for I/O conversion. In other words, we do not need to perform
-  * any conversion, such as pack/unpack or from_bytes/to_bytes, as required by other
-  * libraries like TweetNaCl or MonoCypher. We also appreciate the maintenance of the Cyclone library,
-  * so we are using the latest version, 2.3.0, released on June 12, 2023.
+  * the only change from the original code is the renaming of 
+  * functions that we extracted. You can see the original naming 
+  * as well as the URL to the function implementation above each
+  * function. We chose the Cyclone crypto library because of its
+  * advantages, such as compactness and speed, eliminating 
+  * the need for I/O conversion. In other words, we do not need to
+  * perform any conversion, such as pack/unpack or 
+  * from_bytes/to_bytes, as required by other libraries like 
+  * TweetNaCl or MonoCypher. Results from our speed measurements
+  * have shown that Cyclone is approximately 5 times faster than
+  * TweetNaCl (packing/unpacking not included).
+  * Additionally, while MonoCypher is slightly faster (about 1.5x)
+  * than Cyclone, there are highly efficient implementations written
+  * in assembly language that outperform any C implementations. These
+  * are particularly suitable for embedded  MCUs like the ARM 
+  * Cortex-M4. Note that measurements were performed on a STM32 MCU
+  * with a Cortex-M3 core.
+  *
+  * We also appreciate the maintenance of the Cyclone library, so we
+  * are using the latest version, 2.3.0, released on June 12, 2023.
 **/
 
 /**
@@ -67,7 +80,7 @@
  // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L79C6-L79C19
  void gf25519Add(uint32_t *r, const uint32_t *a, const uint32_t *b)
  {
-    uint_t i;
+    size_t i;
     uint64_t temp;
   
     //Compute R = A + B
@@ -95,7 +108,7 @@
  // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L130
  void gf25519Sub(uint32_t *r, const uint32_t *a, const uint32_t *b)
  {
-    uint_t i;
+    size_t i;
     int64_t temp;
   
     //Compute R = A - 19 - B
@@ -127,8 +140,8 @@
  // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L191 
  void gf25519Mul(uint32_t *r, const uint32_t *a, const uint32_t *b)
  {
-    uint_t i;
-    uint_t j;
+    size_t i;
+    size_t j;
     uint64_t c;
     uint64_t temp;
     uint32_t u[16];
@@ -229,9 +242,9 @@
  
  // Original name: curve25519Pwr2
  // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L331
- void gf25519Pwr2(uint32_t *r, const uint32_t *a, uint_t n)
+ void gf25519Pwr2(uint32_t *r, const uint32_t *a, size_t n)
  {
-    uint_t i;
+    size_t i;
   
     //Pre-compute (A ^ 2) mod p
     gf25519Sqr(r, a);
@@ -254,7 +267,7 @@
  // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L352
  void gf25519Red(uint32_t *r, const uint32_t *a)
  {
-    uint_t i;
+    size_t i;
     uint64_t temp;
     uint32_t b[8];
   
@@ -270,7 +283,12 @@
     b[7] -= 0x80000000;
   
     //If B < (2^255 - 19) then R = B, else R = A
+    #ifdef USE_GF25519SELECT
     gf25519Select(r, b, a, (b[7] & 0x80000000) >> 31);
+    #else
+    gf25519Copy(r,a);
+    gf25519Swap(r,b, !((b[7] & 0x80000000) >> 31));
+    #endif
  }
     
   
@@ -284,7 +302,7 @@
  // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L515
  void gf25519Copy(uint32_t *a, const uint32_t *b)
  {
-    uint_t i;
+    size_t i;
   
     //Copy the value of the integer
     for(i = 0; i < 8; i++)
@@ -305,7 +323,7 @@
  // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L534
  void gf25519Swap(uint32_t *a, uint32_t *b, uint32_t c)
  {
-    uint_t i;
+    size_t i;
     uint32_t mask;
     uint32_t dummy;
   
@@ -322,6 +340,8 @@
     }
  }
   
+
+
   
  /**
   * @brief Select an integer
@@ -333,10 +353,11 @@
   
  // Original name: curve25519Select
  // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L562
+ #ifdef USE_GF25519SELECT
  void gf25519Select(uint32_t *r, const uint32_t *a, const uint32_t *b,
     uint32_t c)
  {
-    uint_t i;
+    size_t i;
     uint32_t mask;
   
     //The mask is the all-1 or all-0 word
@@ -349,7 +370,7 @@
        r[i] = (a[i] & mask) | (b[i] & ~mask);
     }
  }
-  
+ #endif 
   
  /**
   * @brief Compare integers
@@ -362,7 +383,7 @@
  // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L587
  uint32_t gf25519Comp(const uint32_t *a, const uint32_t *b)
  {
-    uint_t i;
+    size_t i;
     uint32_t mask;
   
     //Initialize mask

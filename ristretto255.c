@@ -1,67 +1,101 @@
-// **********************************************************************************
-// -----------------------------TECHNICAL UNIVERSITY OF KOSICE-----------------------
-// ------------------- FACULTY OF ELECTRICAL ENGINEERING AND INFORMATICS-------------
-// --------------------- THIS CODE IS A PART OF A MASTER'S THESIS -------------------
-// -------------------------------------Master thesis--------------------------------
-// ----------------------------Patrik Zelenak & Milos Drutarovsky--------------------
-// --------------------------------------version 0.1---------------------------------
-// **********************************************************************************
+// ******************************************************************
+// ----------------- TECHNICAL UNIVERSITY OF KOSICE -----------------
+// ---Department of Electronics and Multimedia Telecommunications ---
+// -------- FACULTY OF ELECTRICAL ENGINEERING AND INFORMATICS -------
+// ------------ THIS CODE IS A PART OF A MASTER'S THESIS ------------
+// ------------------------- Master thesis --------------------------
+// -----------------Patrik Zelenak & Milos Drutarovsky --------------
+// ---------------------------version 0.1.1 -------------------------
+// --------------------------- 21-09-2023 ---------------------------
+// ******************************************************************
 
 /**
-  * This file is core of our ristretto255 implementation. It is more efficient
-  * version of our equivalent TweetNaCl version of ristretto255 
-  * (https://github.com/Alg0ritmus/textbook_ristretto255). This file includes
-  * all necessary functions for creation of other protocols that uses
-  * eliptic curve Curve25519. 
+  * This file is core of our ristretto255 implementation. It is more
+  * efficient version of our equivalent TweetNaCl version 
+  * of ristretto255 (https://github.com/Alg0ritmus/textbook_ristretto255).
+  * This file includes all necessary functions for creation of other
+  * protocols that use  eliptic curve Curve25519. 
   *
-  * Ristretto255 is a cryptographic construction designed for efficient
-  * and secure elliptic curve cryptography (ECC) operations. It is based on
-  * the Curve25519 elliptic curve, which is a widely used curve in modern cryptography
+  * Ristretto255 is a cryptographic construction designed for 
+  * efficient and secure elliptic curve cryptography (ECC) 
+  * operations. It is based on the Curve25519 elliptic curve,
+  * which is a widely used curve in modern cryptography
   * due to its strong security properties and efficient performance.
   *
   * Curve25519, the underlying elliptic curve, has a cofactor of 8,
-  * meaning its order is eight times a prime number. This cofactor introduces
-  * the possibility of small subgroup attacks because not all points on the curve
-  * are in the main subgroup. The cofactor is a factor by which the order of the elliptic curve group
-  * is divisible. In elliptic curve cryptography, it's important to work with points
-  * that are on the main subgroup of the curve, as points on small subgroups
-  * can introduce vulnerabilities.
+  * meaning its order is eight times a prime number. This cofactor 
+  * introduces the possibility of small subgroup attacks because not
+  * all points on the curve are in the main subgroup. The cofactor
+  * is a factor by which the order of the elliptic curve group is
+  * divisible. In elliptic curve cryptography, it's important to work
+  * with points that are on the main subgroup of the curve, as points
+  * on small subgroups can introduce vulnerabilities.
   *
-  * Ristretto255 addresses this issue by providing a way to map points from the Curve25519
-  * curve to a unique representative point in a group that eliminates the cofactor-related
-  * vulnerabilities. By doing so, it ensures that all points in its representation belong to
-  * the main subgroup, making it resistant to small subgroup attacks and other potential security
-  * issues associated with the cofactor. This mapping is carefully designed to maintain compatibility
-  * with Curve25519's arithmetic operations while addressing the cofactor problem, thus providing a safer
+  * Ristretto255 addresses this issue by providing a way to map 
+  * points from the Curve25519 curve to a unique representative point
+  * in a group that eliminates the cofactor-related vulnerabilities.
+  * By doing so, it ensures that all points in its representation 
+  * belong to the main subgroup, making it resistant to small 
+  * subgroup attacks and other potential security issues associated
+  * with the cofactor. This mapping is carefully designed to maintain
+  * compatibility with Curve25519's arithmetic operations while 
+  * addressing the cofactor problem, thus providing a safer
   * and more predictable foundation for cryptographic protocols.
   *
-  * In our representation we used Cyclone, a crypto library, that internaly works with 8-word elements.
-  * This is why we chose field_elem (our internal representation of GF(2*255-19) field element).
-  * By choosing Cyclone crypto library because of its advantages, such as compactness and speed,
-  * eliminating the need for I/O conversion. In other words, we do not need to perform
-  * any conversion, such as pack/unpack or from_bytes/to_bytes, as required by other
-  * libraries like TweetNaCl or MonoCypher. Note that we are using pack/unpack terminology just for copying data.
-  * Most of the functions used from Cyclone are identical with original code.
-  * In fact we extract and rename all necessary functions.
+  * In our representation we used Cyclone, a crypto library,
+  * that internaly works with 8-word elements. This is why we chose
+  * field_elem (our internal representation of GF(2*255-19) 
+  * field element) as 8-word elements. We chose Cyclone crypto library
+  * because of its advantages, such as compactness and speed,
+  * elimination of I/O conversion. In other words, we do not need to
+  * perform any conversion, such as pack/unpack or from_bytes/to_bytes
+  * as required by other libraries like TweetNaCl or MonoCypher. Note
+  * that we are using pack/unpack terminology just for copying data.
+  * Most of the functions used from Cyclone are identical with 
+  * original code. In fact we just extract and rename all necessary
+  * functions.
+  *
+  * Results from our speed measurements have shown that Cyclone is
+  * approximately 5 times faster than TweetNaCl (packing/unpacking
+  * not included). Additionally, while MonoCypher is slightly faster
+  * (about 1.5 times) than Cyclone, there are highly efficient 
+  * implementations written in assembly language that outperform
+  * any C implementations. These are particularly suitable for
+  * embedded MCUs like the ARM Cortex-M4. This is one of the reasons
+  * why we chose Cyclone.
+  * Note that measurements were performed on an STM32 MCU with
+  * a Cortex-M3 core. 
   * 
-  * Besides Cyclone we also implemented necessary functions to perform scalar multiplication 
-  * of ristretto255 point. Ristretto255 point has its own representation (see `helpers.h`), that uses
-  * extended Edwards point form. Internally, a Ristretto point is represented by an extended Edwards point. Two extended Edwards points P,Q
-  * may represent the same Ristretto point, in the same way that different projective X,Y,Z,T coordinates may represent
-  * the same extended Edwards point. Group operations on Ristretto points are carried out with no overhead by performing the operations on the representative Edwards points. For example ristretto255_point_addition() performs addition of ristretto255 points, which impl.
-  * was largely inspired by TweetNaCl crypto library.
+  * Besides Cyclone we also implemented necessary functions to 
+  * perform scalar multiplication of ristretto255 point.
+  * Ristretto255 point has its own representation (see `helpers.h`),
+  * that uses extended Edwards point form. Internally, a Ristretto
+  * point is represented by an extended Edwards point. 
+  * Two extended Edwards points P,Q may represent the same Ristretto
+  * point, in the same way that different projective X,Y,Z,T 
+  * coordinates may represent the same extended Edwards point.
+  * Group operations on Ristretto points are carried out with no 
+  * overhead by performing the operations on the representative
+  * Edwards points. For example ristretto255_point_addition() performs
+  * addition of ristretto255 points, which impl. was largely inspired
+  * by TweetNaCl crypto library.
 **/
 
+#include <string.h>
 #include "ristretto255.h"
 #include "ristretto255_constants.h"
 #include "gf25519.h"
-#include <string.h>
+#include "modl.h"
 
-
-#define WIPE(felem) wipe_field_elem(felem, sizeof(felem))
+// Macro WIPE uses crypto_wipe function implemented in modl.h.
+// It is wiping function that makes sure we clear memory 
+// respomsibly. Function was taken from Monocypher crypto library.
+// Note that macro WIPE is then used in WIPE_PT to wipe 
+// ristretto255_point which structure is defined in helpers.h
+#define WIPE(felem) crypto_wipe(felem, sizeof(felem))
 #define WIPE_PT(rpoint) wipe_ristretto255_point(rpoint)
-// functions redefined below are "renamed" to fit our equivalent TweetNaCl
-// representation of ristretto255
+// functions redefined below are "renamed" to fit our equivalent 
+// TweetNaCl representation of ristretto255
 #define swap25519 gf25519Swap
 #define fsub gf25519Sub
 #define fadd gf25519Add
@@ -81,7 +115,8 @@
 #ifdef BIGENDIAN_FLAG
 void pack(u8* uint8Array,const u32* uint32ArrayIn) {
     uint32_t uint32Array[8];
-    // Note that Cyclone internally uses modulo 2P operations, which are more efficient;
+    // Note that Cyclone internally uses modulo 2P operations,
+    // which are more efficient;
     // so we need to use reduction here
     carry25519(uint32Array, uint32ArrayIn); 
     for (int i = 0; i < 8; ++i) {
@@ -126,7 +161,11 @@ void wipe_ristretto255_point(ristretto255_point* ristretto_in){
 #define pack25519 pack
 #define unpack25519 unpack
 
-
+/**
+  * @brief Negation of field_elem
+  * @param[in]   -> in
+  * @param[out]  -> -in
+**/
 // fneg() => creates negative input and "save" it to variable out
 // function uses modular logic where negation of element a -> p-a = -a 
 // inspired by: https://github.com/jedisct1/libsodium/blob/master/src/libsodium/include/sodium/private/ed25519_ref10_fe_51.h#L94
@@ -136,8 +175,15 @@ void fneg(field_elem out, field_elem in){
 };
 
 
-// Note that field_elem is negative, only if LSB is set to 1, otherwise it is  positive
-// This is something that is very important to realize, when constructing ristretto255 bcs.
+/**
+  * @brief Returns 1 if field_elem is negative 
+  * @param[in]   -> in
+  * @param[out]  -> Boolean: True/False
+**/
+// Note that field_elem is negative, only if LSB is set to 1,
+// otherwise it is  positive
+// This is something that is very important to realize,
+// when constructing ristretto255 bcs.
 // it is used on multiple places in code
 // inspired by: https://github.com/jedisct1/libsodium/blob/master/src/libsodium/include/sodium/private/ed25519_ref10_fe_25_5.h#L302
 int is_neg(field_elem in){
@@ -146,13 +192,23 @@ int is_neg(field_elem in){
     return temp[0] & 1;
 }
 
+
+/**
+  * @brief Returns 1 if u8[BYTES_ELEM_SIZE] is negative 
+  * @param[in]   -> in
+  * @param[out]  -> Boolean: True/False
+**/
 // equivalent for is_neg for 32-word u8[32] element
 int is_neg_bytes(const u8 in[BYTES_ELEM_SIZE]){
     return in[0] & 1;
 }
 
-
-// fabsolute() functions gets absolute value of input in constant time 
+/**
+  * @brief Returns absolute value of field_elem
+  * @param[in]   -> in
+  * @param[out]  -> abs(in)
+**/
+// fabsolute functions gets absolute value of input in constant time 
 void fabsolute(field_elem out, field_elem in){
     field_elem temp;
     fcopy(temp,in); // temp=in, so I dont rewrite in
@@ -164,8 +220,23 @@ void fabsolute(field_elem out, field_elem in){
 }
 
 
+/**
+  * @brief Returns 1 if nonnegative root exists
+  * @param[in]   -> a
+  * @param[in]   -> b
+  * @param[out]  -> nonnegative square root of either (a/b)^1/2 or (ia/b)^1/2
+**/
 // function that calc ristretto255 inverse square root
-// Internal compotation of inversion of B and the square root: A * B^3 * (A * B^7)^((p - 5) / 8)
+// Implementing Ristretto requires computing (inverse) square roots.
+// Ed25519 implementations compute square roots as part of the
+// Ed25519 decompression functionality,
+// but this is often inlined into the decompression formulas,
+/// so we need to tune existing Cyclone's curve25519Sqrt
+// to fit our needs. Note that our inv_sqrt() computes the
+// nonnegative square root of either (a/b)^1/2 or (ia/b)^1/2,
+// where i = SQRT_M1 (constant from ristretto255 draft).
+// Internal compotation of inversion of B and the square root:
+// A * B^3 * (A * B^7)^((p - 5) / 8)
 // largely inspired by Cyclone's curve25519Sqrt:
 // https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L430
 // Logic Inspired by: https://ristretto.group/formulas/invsqrt.html
@@ -175,9 +246,10 @@ static int inv_sqrt(field_elem out,const field_elem a, const field_elem b){
    int flipped_sign_sqrt_i;
    field_elem c; field_elem v;
 
-   //Compute the candidate root (A / B)^((p + 3) / 8). This can be done
-   //with the following trick, using a single modular powering for both the
-   //inversion of B and the square root: A * B^3 * (A * B^7)^((p - 5) / 8)
+   // Compute the candidate root (A / B)^((p + 3) / 8). This can be
+   // done with the following trick, using a single modular powering 
+   // for both the inversion of B and the square root:
+   // A * B^3 * (A * B^7)^((p - 5) / 8)
    pow2(v, b);
    fmul(v, v, b);
    pow2(v, v);
@@ -240,24 +312,39 @@ static int inv_sqrt(field_elem out,const field_elem a, const field_elem b){
    fmul(v, SQRT_M1, out);
 
    // if cond = 1, select first option
+   #ifdef USE_GF25519SELECT
    fselect(out, out, v, flipped_sign_sqrt | flipped_sign_sqrt_i ); 
+   #else
+   swap25519(out, v, flipped_sign_sqrt | flipped_sign_sqrt_i ); 
+   #endif
 
   // calc v = -r
    fneg(v,out);
    // if cond = 1, select first option
+   #ifdef USE_GF25519SELECT
    fselect(out, out, v, is_neg(out)); 
+   #else
+   swap25519(out, v, is_neg(out)); 
+   #endif  
 
    WIPE(c); WIPE(v);
    return correct_sign_sqrt | flipped_sign_sqrt;
 }
 
 
+/**
+  * @brief Maps field_elem into ristretto255_point
+  * @param[in]   -> t
+  * @param[out]  -> ristretto255_point from field_elem
+**/
 // MAP function from draft
-// MAP is used in hash_to_group() fuction to get ristretto point from hash
+// MAP is used in hash_to_group() fuction to get ristretto point
+// from hash
 // Input parameter is field_elem "t"
-// Output is point on Edward's (interpreted as ristretto255_point) curve with coords X,Y,Z,T
+// Output is point on Edward's (interpreted as ristretto255_point)
+// curve with coords X,Y,Z,T
 // MAP is also called ristretto255_elligator
-static int MAP(ristretto255_point* ristretto_out, const field_elem t){ 
+static void MAP(ristretto255_point* ristretto_out, const field_elem t){ 
     field_elem tmp1, tmp2, tmp3, tmp4, tmp5;
     int was_square, wasnt_square;
 
@@ -319,16 +406,23 @@ static int MAP(ristretto255_point* ristretto_out, const field_elem t){
 
     WIPE(ss); WIPE(w2); WIPE(w0);
     WIPE(w1); WIPE(w3);
-    return 0;
 }
 
 
 
-
+/**
+  * @brief Add two ristretto255_point points
+  * @param[in]   -> p ristretto255_point
+  * @param[in]   -> q ristretto255_point
+  * @param[out]  -> r ristretto255_point
+**/
 // Ristretto255 point addition (Edward's coords | X,Y,Z,T ) 
-// ristretto255_point_addition is identical to tweetNaCl sv add(gf p[4],gf q[4]),
-// Basically I changed name to smth more slef-explaining and chaged gf[4] to our ristretto255_point representation
-// of ristretto points. NOTE: gf is the same as our field_elem (just naming is different)
+// ristretto255_point_addition is identical to 
+// tweetNaCl sv add(gf p[4],gf q[4]),
+// Basically I changed name to smth more slef-explaining and 
+// changed gf[4] to our ristretto255_point representation
+// of ristretto points. NOTE: gf is the same as our field_elem
+// (just naming is different)
 // https://github.com/dominictarr/tweetnacl/blob/master/tweetnacl.c#L590
 void ristretto255_point_addition(ristretto255_point* r,const ristretto255_point* p,const ristretto255_point* q){
     field_elem temp_1,temp_2,temp_3, temp_4, temp_5;
@@ -371,7 +465,15 @@ void ristretto255_point_addition(ristretto255_point* r,const ristretto255_point*
     WIPE(f); WIPE(e);
 }
 
-// cswap() => conditional swap, if b is set to 1, then swap 2 ristretto points,
+
+/**
+  * @brief Conditional swap if b is set to 1
+  * @param[in/out]   -> p ristretto255_point
+  * @param[in/out]   -> q ristretto255_point
+  * @param[in]       -> b if set to 1 swap
+**/
+// cswap() => conditional swap, if b is set to 1,
+// then swap 2 ristretto points
 // inspired by tweetNaCl: https://github.com/dominictarr/tweetnacl/blob/master/tweetnacl.c#L615
 static void cswap(ristretto255_point* p, ristretto255_point* q,u8 b){
     swap25519(p->x,q->x,b);
@@ -381,6 +483,12 @@ static void cswap(ristretto255_point* p, ristretto255_point* q,u8 b){
 }
 
 
+
+/**
+  * @brief Decode input bytes u8[32] to ristretto255_point
+  * @param[in]   -> bytes_in[32]
+  * @param[out]   -> ristretto_out ristretto255_point
+**/
 // Inspired by ristretto draft
 // generate ristretto point from bytes[32]
 int ristretto255_decode(ristretto255_point *ristretto_out, const u8 bytes_in[BYTES_ELEM_SIZE]){
@@ -391,7 +499,8 @@ int ristretto255_decode(ristretto255_point *ristretto_out, const u8 bytes_in[BYT
 
   u8 checked_bytes[BYTES_ELEM_SIZE];
 
-  // Step 1: Check that the encoding of the field element is canonical
+  // Step 1: Check that the encoding of the 
+  // field element is canonical
   #define _s temp1
   unpack25519(_s, bytes_in);
   pack25519(checked_bytes,_s);
@@ -426,7 +535,7 @@ int ristretto255_decode(ristretto255_point *ristretto_out, const u8 bytes_in[BYT
   
 
 
-  // d -> from ristretto darft
+  // d == EDWARDS_D-> from ristretto darft
   #define duu1_positive temp6
   fmul(duu1_positive,EDWARDS_D,uu1); // d*u1^2
   #define duu1 temp5
@@ -490,6 +599,12 @@ int ristretto255_decode(ristretto255_point *ristretto_out, const u8 bytes_in[BYT
 }
 
 
+
+/**
+  * @brief Encode input ristretto255_point to output bytes u8[32]
+  * @param[in]   -> ristretto_out ristretto255_point
+  * @param[out]      -> bytes_out[32]
+**/
 // Inspired by ristretto draft
 // encodes ristretto255 point to 32-word u8[32] element
 int ristretto255_encode(u8 bytes_out[BYTES_ELEM_SIZE], const ristretto255_point* ristretto_in){
@@ -577,14 +692,25 @@ int ristretto255_encode(u8 bytes_out[BYTES_ELEM_SIZE], const ristretto255_point*
 }
 
 
+
+/**
+  * @brief Turns hash bytes[32] into valid ristretto point in GF
+  * @param[in]   -> bytes_in[32]
+  * @param[out]  -> bytes_out[32]
+**/
+
 // Inspired by ristretto draft
-// hash_to_group or element derivation function takes hash input and turn it into 
-// valid ristretto point. In this implementation, input is hexa-string (see more below)
+// hash_to_group or element derivation function takes 
+// hash input and turn it into valid ristretto point.
+// In this implementation, input is hexa-string (see more below)
 // hash_to_group function consists of 3 steps:
 // 1) divide input into 2 halves and mask both hlaves
-// 2) MAP both halves so out get 2 points represented with X,Y,Z,T coords (Extended edward's coords)
-// 3) perform addition of 2 edward's point, note that we need to add 2 edwards points so fe25519 arithmetics won't fit there
-// we need to use function that adds 2 edwards points
+// 2) MAP both halves so out get 2 points represented 
+// with X,Y,Z,T coords (Extended edward's coords)
+//
+// 3) perform addition of 2 edward's point, note that
+// we need to add 2 edwards points so fe25519 arithmetics won't 
+// fit there we need to use function that adds 2 edwards points
 
 int hash_to_group(u8 bytes_out[BYTES_ELEM_SIZE], const u8 bytes_in[HASH_BYTES_SIZE]){
   ristretto255_point a_point;
@@ -604,8 +730,8 @@ int hash_to_group(u8 bytes_out[BYTES_ELEM_SIZE], const u8 bytes_in[HASH_BYTES_SI
 
   
   // MASK LSB for each half, this is equivalent to modulo 2**255
-  // This step is very important, if skipped, hash_to_group returns invalid
-  // elements
+  // This step is very important, if skipped, hash_to_group 
+  // returns invalid elements
   t1[31] &= 0x7F;
   t2[31] &= 0x7F;
 
@@ -626,6 +752,13 @@ int hash_to_group(u8 bytes_out[BYTES_ELEM_SIZE], const u8 bytes_in[HASH_BYTES_SI
   return 0;
 }
 
+
+/**
+  * @brief Scalar multiplication of ristretto255_point
+  * @param[in]   -> q ristretto255_point 
+  * @param[in]   -> s ==> scalar 
+  * @param[out]  -> p ristretto255_point
+**/
 // ristretto255_scalarmult() => scalar multiplication ristretto_point q * scalar s
 // Note that scalar "s" is represented as u8[32]
 // Inspired by tweetNaCl: https://github.com/dominictarr/tweetnacl/blob/master/tweetnacl.c#L632

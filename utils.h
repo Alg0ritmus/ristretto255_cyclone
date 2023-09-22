@@ -22,8 +22,6 @@ void print(const field_elem o);
 
 void print_32(const u8* o);
 
-void pack_and_print_32(const field_elem o);
-
 void wipe_field_elem(void *felem, size_t size);
 
 int bytes_eq_32( const u8 a[BYTES_ELEM_SIZE],  const u8 b[BYTES_ELEM_SIZE]);
