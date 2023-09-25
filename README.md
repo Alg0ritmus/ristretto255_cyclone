@@ -3,15 +3,18 @@ C - `comp.bat`(windows) <br>
 # Progress:
 
 
+## 24.9.2023
+Pridany pokec + info o hlbke zasobnika (mozno prediskutovat)<br>
+Dodany test na inverziu.<br>
+Select pouziva mensi stack-size ako swap (\~4B), nechceme radsej select?<br>
+
 
 ## 22.9.2023
-Nedokoncene!!!
-Spravil som basic makefile + nahradil select swapom
-Musim dopisat pokec ku config.h
-Dopisat commenty podls RFC + docistit kod
+Nedokoncene!!!<br>
+Spravil som basic makefile + nahradil select swapom<br>
+Musim dopisat pokec ku config.h<br>
+Dopisat commenty podls RFC + docistit kod<br>
 
-
-prestuduj OPAQUE
 
 ## 18.9.2023
 Pridany pokec + zabudol som na MEMORY ALLOCATION kt. bude pridane v dalsej verzii dokumentu spolu s pripadnymi opravami.<br>

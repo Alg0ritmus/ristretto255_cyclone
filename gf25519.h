@@ -28,7 +28,7 @@
   * in assembly language that outperform any C implementations. These
   * are particularly suitable for embedded  MCUs like the ARM 
   * Cortex-M4. Note that measurements were performed on a STM32 MCU
-  * with a Cortex-M3 core.
+  * with a Cortex-M4 core.
   *
   * We also appreciate the maintenance of the Cyclone library, so we
   * are using the latest version, 2.3.0, released on June 12, 2023.
@@ -91,51 +91,51 @@
 
 // Original name: curve25519Add
 // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L79C6-L79C19
-void gf25519Add(uint32_t *r, const uint32_t *a, const uint32_t *b);
+void gf25519Add(u32 *r, const u32 *a, const u32 *b);
 
 // Original name: curve25519Sub
 // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L130
-void gf25519Sub(uint32_t *r, const uint32_t *a, const uint32_t *b);
+void gf25519Sub(u32 *r, const u32 *a, const u32 *b);
   
 // Original name: curve25519Mul
 // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L191 
-void gf25519Mul(uint32_t *r, const uint32_t *a, const uint32_t *b);
+void gf25519Mul(u32 *r, const u32 *a, const u32 *b);
  
 // Original name: curve25519Red
 // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L352
-void gf25519Red(uint32_t *r, const uint32_t *a);
+void gf25519Red(u32 *r, const u32 *a);
 
 // Original name: curve25519Sqr
 // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L317C18-L317C31
-void gf25519Sqr(uint32_t *r, const uint32_t *a);
+void gf25519Sqr(u32 *r, const u32 *a);
 
 // Original name: curve25519Copy
 // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L515
-void gf25519Copy(uint32_t *a, const uint32_t *b);
+void gf25519Copy(u32 *a, const u32 *b);
 
 // Original name: curve25519Swap
 // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L534
-void gf25519Swap(uint32_t *a, uint32_t *b, uint32_t c);
+void gf25519Swap(u32 *a, u32 *b, u32 c);
 
 // Note: we replaced curve25519Select with gf25519Swap, so we dont need it anymore
 // but feel free to use it, MACRO USE_GF25519SELECT
 // Original name: curve25519Select
-//URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L562
+// URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L562
 #ifdef USE_GF25519SELECT
-void gf25519Select(uint32_t *r, const uint32_t *a, const uint32_t *b, uint32_t c);
+void gf25519Select(u32 *r, const u32 *a, const u32 *b, u32 c);
 #endif
 
 // Original name: curve25519Comp
 // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L587
-uint32_t gf25519Comp(const uint32_t *a, const uint32_t *b);
+u32 gf25519Comp(const u32 *a, const u32 *b);
 
 // Original name: curve25519Pwr2
 // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L331
-void gf25519Pwr2(uint32_t *r, const uint32_t *a, size_t n);
+void gf25519Pwr2(u32 *r, const u32 *a, size_t n);
 
 //C++ guard
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif
 
 #endif

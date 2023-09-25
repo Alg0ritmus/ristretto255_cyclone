@@ -310,36 +310,39 @@ int main(){
 
     u8 r[32], iner[32];
     u8 modL_test_vec[32] = {
-        0xd6, 0x61, 0xd1, 0xae, 0x29, 0x16, 0x1c, 0x60,
-        0x72, 0xd1, 0xfe, 0x20, 0x73, 0x35, 0xba, 0x6d,
-        0x03, 0x8b, 0x34, 0x3a, 0x73, 0x21, 0xc7, 0xcd,
-        0xd1, 0x39, 0x87, 0xfa, 0xed, 0x57, 0xf0, 0x0b
+        0x09, 0x78, 0xd0, 0xfb, 0xe4, 0x4d,
+        0x7c, 0x69, 0x60, 0xa9, 0xab, 0x59,
+        0xf3, 0xad, 0x3c, 0x13, 0xd8, 0x9b,
+        0xd1, 0xe6, 0x11, 0x2a, 0x65, 0xeb,
+        0x48, 0xc9, 0x9d, 0x7a, 0x18, 0x40,
+        0x88, 0x5f,
     };
-    int k;
-
+    int k,i;
+    const u8 testing_constant = 0x57;
 
     // MOD L test vector
     // in = 2^256-1;
+
        for(k=0; k<32; k++) {
           iner[k]= 255;
        }
 
-       for (k=0; k< 10; k++) {
+       for (k=0; k< 1000; k++) {
     //  calc of inverse
           modl_l_inverse(r, iner);
+          for(i=0; i<32; i++) {
+            iner[i] = r[i] ^ testing_constant;
+          }
        }    
 
-    subresult = bytes_eq_32(r, modL_test_vec); // returns 1 if two are eq
+    subresult = bytes_eq_32(iner, modL_test_vec); // returns 1 if two are eq
     result &= subresult;
     #ifdef VERBOSE_FLAG
     if (!subresult){
-        //print_32(r);
             printf("ModL VECTOR TEST : FAILED! Error was found when testing vector for mod L\n");
     }
     else{
         printf("ModL VECTOR TEST: SUCCESS!\n");
-        // d6 61 d1 ae 29 16 1c 60 72 d1 fe 20 73 35 ba 6d 03 8b 34 3a 73 21 c7 cd d1 39 87 fa ed 57 f0 0b
-        //print_32(r);
     }
     #endif   
 

@@ -15,13 +15,6 @@
 // Dependencies
 #include "utils.h"
 
-// inspired by Monocypher's crypto_wipe
-// URL: https://github.com/LoupVaillant/Monocypher/blob/master/src/monocypher.c#L163
-void wipe_field_elem(void *felem, size_t size){
-    volatile u8 *to_be_cleared = (u8*)felem;
-    for (size_t i = 0; i < size; i++) to_be_cleared[i] = 0;
-}
-
 void print(const field_elem o){
 
     for (int i=0;i<FIELED_ELEM_SIZE;i++){

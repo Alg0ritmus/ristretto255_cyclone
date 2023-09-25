@@ -68,6 +68,14 @@
   * that the data being pointed to may change,
   * while volatile on a variable indicates that the variable itself
   * may change at any time.
+  *
+  * Note:
+  * A pointer of the form volatile volatile u8 *v_secret
+  * is a pointer to an u8 that the compiler will treat as volatile.
+  * This means that the compiler will assume that it is possible
+  * for the variable that v_secret is pointing at to have changed
+  * even if there is nothing in the source code to suggest that
+  * this might occur. (https://stackoverflow.com/questions/9935190/why-is-a-point-to-volatile-pointer-like-volatile-int-p-useful).
 **/
 void crypto_wipe(void *secret, size_t size)
 {
@@ -88,7 +96,7 @@ static void store32_le(u8 out[4], u32 in){
     out[3] = (in >> 24) & 0xff;
 }
 
-static void store32_le_buf(u8 *dst, const u32 *src, size_t size) {
+void store32_le_buf(u8 *dst, const u32 *src, size_t size) {
     size_t i;
     FOR(i, 0, size) { store32_le(dst + i*4, src[i]); }
 }
@@ -194,39 +202,10 @@ void mod_l(u8 reduced[32], const u32 x[16]){
     WIPE_BUFFER(xr);
 }
 
+
 /********************* WARNING ********************************/
 // Functional only on CPU with Little Endian architecture!
 // Feature for Big Endian architecture is not implemented (yet). 
-static void multiply_mod_l(u32 r[8], const u32 a[8], const u32 b[8]){
-    u32 c[16] = {0};
-        multiply(c, a, b);
-        mod_l((u8*) r, c);
-}
-
-
-// kod s vyuzitim TMP priestoru na zasobniku 
-void inverse_mod_l(u8 out[BYTES_ELEM_SIZE], const u8 in[BYTES_ELEM_SIZE]){
-    static const  u8 Lm2[BYTES_ELEM_SIZE] = { // L - 2
-        0xeb, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58,
-        0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
-    };
-    u32 m_inv [8] = {1};
-
-    // Compute the inverse
-    for (int i = 252; i >= 0; i--) {
-        multiply_mod_l(m_inv, m_inv, m_inv);
-
-        if (scalar_bit(Lm2, i)) {
-            multiply_mod_l(m_inv, m_inv, (u32*) in);
-
-        }
-    }
-    int i;
-    COPY(i ,out, (u8*) m_inv, BYTES_ELEM_SIZE);
-}
-
 
 // MONTGOMERY implementation of modular inverse (mod l).
 // More efficient in some ways (). See modl.h
@@ -360,5 +339,40 @@ void crypto_x25519_inverse(u8 out[BYTES_ELEM_SIZE], const u8 in[BYTES_ELEM_SIZE]
 
     WIPE_BUFFER(m_scl);
     WIPE_BUFFER(product);  WIPE_BUFFER(m_inv);
+}
+#else //Barrett reduction
+/********************* WARNING ********************************/
+// Functional only on CPU with Little Endian architecture!
+// Feature for Big Endian architecture is not implemented (yet). 
+static void multiply_mod_l(u32 r[8], const u32 a[8], const u32 b[8]){
+    u32 c[16] = {0};
+        multiply(c, a, b);
+        mod_l((u8*) r, c);
+}
+
+
+// kod s vyuzitim TMP priestoru na zasobniku 
+void inverse_mod_l(u8 out[BYTES_ELEM_SIZE], const u8 in[BYTES_ELEM_SIZE]){
+    static   u8 Lm2[BYTES_ELEM_SIZE] = { // L - 2
+        0xeb, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58,
+        0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
+    };
+    u32 m_inv [8] = {1};
+    // Compute the inverse
+    for (int i = 252; i >= 0; i--) {
+        multiply_mod_l(m_inv, m_inv, m_inv);
+        //printf("i=%d\n", scalar_bit(Lm2, i));
+        if (scalar_bit(Lm2, i)) {
+
+            multiply_mod_l(m_inv, m_inv, (u32*) in);
+
+        }
+    }
+    int i;
+    u32 skuska[8]= {1};
+    multiply_mod_l(skuska,(u32*) Lm2,skuska);
+    COPY(i ,out, (u8*) m_inv, BYTES_ELEM_SIZE);
 }
 #endif

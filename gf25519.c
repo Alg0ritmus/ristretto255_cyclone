@@ -28,7 +28,7 @@
   * in assembly language that outperform any C implementations. These
   * are particularly suitable for embedded  MCUs like the ARM 
   * Cortex-M4. Note that measurements were performed on a STM32 MCU
-  * with a Cortex-M3 core.
+  * with a Cortex-M4 core.
   *
   * We also appreciate the maintenance of the Cyclone library, so we
   * are using the latest version, 2.3.0, released on June 12, 2023.
@@ -78,10 +78,10 @@
   
  // Original name: curve25519Add
  // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L79C6-L79C19
- void gf25519Add(uint32_t *r, const uint32_t *a, const uint32_t *b)
+ void gf25519Add(u32 *r, const u32 *a, const u32 *b)
  {
     size_t i;
-    uint64_t temp;
+    u64 temp;
   
     //Compute R = A + B
     for(temp = 0, i = 0; i < 8; i++)
@@ -106,7 +106,7 @@
   
  // Original name: curve25519Sub
  // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L130
- void gf25519Sub(uint32_t *r, const uint32_t *a, const uint32_t *b)
+ void gf25519Sub(u32 *r, const u32 *a, const u32 *b)
  {
     size_t i;
     int64_t temp;
@@ -138,13 +138,13 @@
   
  // Original name: curve25519Mul
  // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L191 
- void gf25519Mul(uint32_t *r, const uint32_t *a, const uint32_t *b)
+ void gf25519Mul(u32 *r, const u32 *a, const u32 *b)
  {
     size_t i;
     size_t j;
-    uint64_t c;
-    uint64_t temp;
-    uint32_t u[16];
+    u64 c;
+    u64 temp;
+    u32 u[16];
   
     //Initialize variables
     temp = 0;
@@ -159,7 +159,7 @@
           //Inner loop
           for(j = 0; j <= i; j++)
           {
-             temp += (uint64_t) a[j] * b[i - j];
+             temp += (u64) a[j] * b[i - j];
              c += temp >> 32;
              temp &= 0xFFFFFFFF;
           }
@@ -169,7 +169,7 @@
           //Inner loop
           for(j = i - 7; j < 8; j++)
           {
-             temp += (uint64_t) a[j] * b[i - j];
+             temp += (u64) a[j] * b[i - j];
              c += temp >> 32;
              temp &= 0xFFFFFFFF;
           }
@@ -192,7 +192,7 @@
     for(i = 0; i < 8; i++)
     {
        temp += u[i];
-       temp += (uint64_t) u[i + 8] * 38;
+       temp += (u64) u[i + 8] * 38;
        u[i] = temp & 0xFFFFFFFF;
        temp >>= 32;
     }
@@ -226,7 +226,7 @@
  
  // Original name: curve25519Sqr
  // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L317C18-L317C31
- void gf25519Sqr(uint32_t *r, const uint32_t *a)
+ void gf25519Sqr(u32 *r, const u32 *a)
  {
     //Compute R = (A ^ 2) mod p
     gf25519Mul(r, a, a);
@@ -242,7 +242,7 @@
  
  // Original name: curve25519Pwr2
  // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L331
- void gf25519Pwr2(uint32_t *r, const uint32_t *a, size_t n)
+ void gf25519Pwr2(u32 *r, const u32 *a, size_t n)
  {
     size_t i;
   
@@ -265,11 +265,11 @@
  
  // Original name: curve25519Red
  // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L352
- void gf25519Red(uint32_t *r, const uint32_t *a)
+ void gf25519Red(u32 *r, const u32 *a)
  {
     size_t i;
-    uint64_t temp;
-    uint32_t b[8];
+    u64 temp;
+    u32 b[8];
   
     //Compute B = A + 19
     for(temp = 19, i = 0; i < 8; i++)
@@ -288,7 +288,7 @@
     #else
     gf25519Copy(r,a);
     gf25519Swap(r,b, !((b[7] & 0x80000000) >> 31));
-    #endif
+    #endif //USE_GF25519SELECT
  }
     
   
@@ -300,7 +300,7 @@
  
  // Original name: curve25519Copy
  // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L515
- void gf25519Copy(uint32_t *a, const uint32_t *b)
+ void gf25519Copy(u32 *a, const u32 *b)
  {
     size_t i;
   
@@ -321,11 +321,11 @@
 
  // Original name: curve25519Swap
  // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L534
- void gf25519Swap(uint32_t *a, uint32_t *b, uint32_t c)
+ void gf25519Swap(u32 *a, u32 *b, u32 c)
  {
     size_t i;
-    uint32_t mask;
-    uint32_t dummy;
+    u32 mask;
+    u32 dummy;
   
     //The mask is the all-1 or all-0 word
     mask = ~c + 1; 
@@ -354,11 +354,11 @@
  // Original name: curve25519Select
  // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L562
  #ifdef USE_GF25519SELECT
- void gf25519Select(uint32_t *r, const uint32_t *a, const uint32_t *b,
-    uint32_t c)
+ void gf25519Select(u32 *r, const u32 *a, const u32 *b,
+    u32 c)
  {
     size_t i;
-    uint32_t mask;
+    u32 mask;
   
     //The mask is the all-1 or all-0 word
     mask = c - 1;
@@ -370,7 +370,7 @@
        r[i] = (a[i] & mask) | (b[i] & ~mask);
     }
  }
- #endif 
+ #endif //USE_GF25519SELECT 
   
  /**
   * @brief Compare integers
@@ -381,10 +381,10 @@
  
  // Original name: curve25519Comp
  // URL: https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c#L587
- uint32_t gf25519Comp(const uint32_t *a, const uint32_t *b)
+ u32 gf25519Comp(const u32 *a, const u32 *b)
  {
     size_t i;
-    uint32_t mask;
+    u32 mask;
   
     //Initialize mask
     mask = 0;
@@ -397,6 +397,6 @@
     }
   
     //Return 0 if A = B, else 1, NOTE: that we need reversed logic in ristretto.c for our needs
-    return (((uint32_t) (mask | (~mask + 1))) >> 31); 
+    return (((u32) (mask | (~mask + 1))) >> 31); 
  }
 

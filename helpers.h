@@ -32,6 +32,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include "config.h"
 
 // pokec k tomuto 
 #define FIELED_ELEM_SIZE 8 
