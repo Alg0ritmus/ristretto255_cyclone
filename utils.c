@@ -1,15 +1,17 @@
-// **********************************************************************************
-// -----------------------------TECHNICAL UNIVERSITY OF KOSICE-----------------------
-// ------------------- FACULTY OF ELECTRICAL ENGINEERING AND INFORMATICS-------------
-// --------------------- THIS CODE IS A PART OF A MASTER'S THESIS -------------------
-// -------------------------------------Master thesis--------------------------------
-// ----------------------------Patrik Zelenak & Milos Drutarovsky--------------------
-// --------------------------------------version 0.1---------------------------------
-// **********************************************************************************
+// ******************************************************************
+// ----------------- TECHNICAL UNIVERSITY OF KOSICE -----------------
+// ---Department of Electronics and Multimedia Telecommunications ---
+// -------- FACULTY OF ELECTRICAL ENGINEERING AND INFORMATICS -------
+// ------------ THIS CODE IS A PART OF A MASTER'S THESIS ------------
+// ------------------------- Master thesis --------------------------
+// -----------------Patrik Zelenak & Milos Drutarovsky --------------
+// ---------------------------version 0.1.3 -------------------------
+// --------------------------- 30-09-2023 ---------------------------
+// ******************************************************************
+
 
 /**
-  * This file contains some useful functions for printing, eq. and 
-  * wiping field_elem. 
+  * This file contains some useful functions for printing, eq.
 **/
 
 // Dependencies

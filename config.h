@@ -1,3 +1,25 @@
+// ******************************************************************
+// ----------------- TECHNICAL UNIVERSITY OF KOSICE -----------------
+// ---Department of Electronics and Multimedia Telecommunications ---
+// -------- FACULTY OF ELECTRICAL ENGINEERING AND INFORMATICS -------
+// ------------ THIS CODE IS A PART OF A MASTER'S THESIS ------------
+// ------------------------- Master thesis --------------------------
+// -----------------Patrik Zelenak & Milos Drutarovsky --------------
+// ---------------------------version 0.1.3 -------------------------
+// --------------------------- 30-09-2023 ---------------------------
+// ******************************************************************
+
+/** *****************************************************************
+	* This file serves as a configuration file where you can set or
+	* unset certain FLAGS based on your preference, enabling or 
+	* disabling them as needed. Above each FLAG, you'll find
+	* a short description to help you understand its specific
+	* purpose. Feel free to experiment with these flags, but
+	* please note that even if BIGENDIAN_FLAG is present,
+	* we do not recommend using it because it is very likely
+	* not working properly YET.
+**/
+
 #ifndef _CONFIG_H
 #define _CONFIG_H
 

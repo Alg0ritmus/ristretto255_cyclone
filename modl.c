@@ -5,8 +5,8 @@
 // ------------ THIS CODE IS A PART OF A MASTER'S THESIS ------------
 // ------------------------- Master thesis --------------------------
 // -----------------Patrik Zelenak & Milos Drutarovsky --------------
-// ---------------------------version 0.1.1 -------------------------
-// --------------------------- 21-09-2023 ---------------------------
+// ---------------------------version 0.1.3 -------------------------
+// --------------------------- 30-09-2023 ---------------------------
 // ******************************************************************
 
 /**
@@ -28,61 +28,6 @@
 **/
 
 #include "modl.h" 
-
-// The macro WIPE_BUFFER is used throughout this file,
-// and it employs the crypto_wipe function (defined below)
-// to securely erase input data.
-#define WIPE_BUFFER(buffer)        crypto_wipe(buffer, sizeof(buffer))
-
-/**
-  * In the context of a crypto library, using volatile to prevent the
-  * compiler from optimizing out memory zeroing is a safety 
-  * precaution. Crypto libraries often deal with sensitive data,
-  * and ensuring that memory is securely wiped (zeroed) is a critical
-  * security requirement to prevent data leakage.
-  *
-  * The compiler's optimization may decide to skip the zeroing
-  * operation if it believes the memory is never read afterward.
-  * By using volatile, you're essentially telling the compiler
-  * not to make that assumption and to perform the zeroing operation
-  * regardless of whether the memory is explicitly read afterward.
-  * This helps ensure that sensitive data is properly wiped from 
-  * memory, which is crucial for security purposes.
-  *
-  * In other words, we need to use volatile because the compiler
-  * might skip zeroing the buffer due to optimization and make the
-  * assumption that 'why would I write into the buffer when it
-  * is never read.'
-  *
-  * One more comment on volatile keyword:
-  * The 'volatile' keyword is used to indicate to the compiler that
-  * a variable or object can change its value at any time without any
-  * action being taken by the code the compiler finds nearby. 
-  * This is typically used to prevent the compiler from optimizing
-  * away certain accesses to memory, especially in cases where 
-  * the memory might be modified by hardware, another thread,
-  * or some other external entity that the compiler cannot predict.
-  *
-  * Last but not least, the difference between volatile on a pointer
-  * and volatile on a variable is that volatile on a pointer indicates
-  * that the data being pointed to may change,
-  * while volatile on a variable indicates that the variable itself
-  * may change at any time.
-  *
-  * Note:
-  * A pointer of the form volatile volatile u8 *v_secret
-  * is a pointer to an u8 that the compiler will treat as volatile.
-  * This means that the compiler will assume that it is possible
-  * for the variable that v_secret is pointing at to have changed
-  * even if there is nothing in the source code to suggest that
-  * this might occur. (https://stackoverflow.com/questions/9935190/why-is-a-point-to-volatile-pointer-like-volatile-int-p-useful).
-**/
-void crypto_wipe(void *secret, size_t size)
-{
-    volatile u8 *v_secret = (u8*)secret;
-    size_t idx;
-    ZERO(idx, v_secret, size);
-}
 
 //////////////////
 // MONOCYPHER - needed for efficient calculation of a mod L
@@ -111,6 +56,9 @@ static int scalar_bit(const u8 s[BYTES_ELEM_SIZE], int i){
 ///////////////////////////
 /// Arithmetic modulo L ///
 ///////////////////////////
+
+// Note that L = 2^252+27742317777372353535851937790883648493
+// Which is goup order.
 static const u32 L[8] = {
     0x5cf5d3ed, 0x5812631a, 0xa2f79cd6, 0x14def9de,
     0x00000000, 0x00000000, 0x00000000, 0x10000000,
@@ -160,7 +108,7 @@ static void remove_l(u32 r[8], const u32 x[8]){
 // Full reduction modulo L (Barrett reduction)
 void mod_l(u8 reduced[32], const u32 x[16]){
    size_t i, j;
-    static const u32 r[9] = {
+    static const u32 r[9] = { // precomputed value for internal purposes 
         0x0a2c131b,0xed9ce5a3,0x086329a7,0x2106215d,
         0xffffffeb,0xffffffff,0xffffffff,0xffffffff,0xf,
     };
@@ -287,7 +235,7 @@ static void redc(u32 u[8], u32 x[16])
 
 void crypto_x25519_inverse(u8 out[BYTES_ELEM_SIZE], const u8 in[BYTES_ELEM_SIZE])
 {
-    static const  u8 Lm2[32] = { // L - 2
+    static const  u8 Lm2[32] = { // L - 2, where L = 2**252+27742317777372353535851937790883648493
         0xeb, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58,
         0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -351,9 +299,9 @@ static void multiply_mod_l(u32 r[8], const u32 a[8], const u32 b[8]){
 }
 
 
-// kod s vyuzitim TMP priestoru na zasobniku 
+// code that uses temporary memory-space on stack
 void inverse_mod_l(u8 out[BYTES_ELEM_SIZE], const u8 in[BYTES_ELEM_SIZE]){
-    static   u8 Lm2[BYTES_ELEM_SIZE] = { // L - 2
+    static u8 Lm2[BYTES_ELEM_SIZE] = { // L - 2
         0xeb, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58,
         0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -363,7 +311,6 @@ void inverse_mod_l(u8 out[BYTES_ELEM_SIZE], const u8 in[BYTES_ELEM_SIZE]){
     // Compute the inverse
     for (int i = 252; i >= 0; i--) {
         multiply_mod_l(m_inv, m_inv, m_inv);
-        //printf("i=%d\n", scalar_bit(Lm2, i));
         if (scalar_bit(Lm2, i)) {
 
             multiply_mod_l(m_inv, m_inv, (u32*) in);
@@ -371,8 +318,6 @@ void inverse_mod_l(u8 out[BYTES_ELEM_SIZE], const u8 in[BYTES_ELEM_SIZE]){
         }
     }
     int i;
-    u32 skuska[8]= {1};
-    multiply_mod_l(skuska,(u32*) Lm2,skuska);
     COPY(i ,out, (u8*) m_inv, BYTES_ELEM_SIZE);
 }
 #endif

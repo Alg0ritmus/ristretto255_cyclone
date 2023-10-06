@@ -5,8 +5,8 @@
 // ------------ THIS CODE IS A PART OF A MASTER'S THESIS ------------
 // ------------------------- Master thesis --------------------------
 // -----------------Patrik Zelenak & Milos Drutarovsky --------------
-// ---------------------------version 0.1.1 -------------------------
-// --------------------------- 21-09-2023 ---------------------------
+// ---------------------------version 0.1.3 -------------------------
+// --------------------------- 30-09-2023 ---------------------------
 // ******************************************************************
 
 /**
@@ -92,26 +92,29 @@
 #include "gf25519.h"
 #include "modl.h"
 
-// Macro WIPE uses crypto_wipe function implemented in modl.h.
-// It is wiping function that makes sure we clear memory 
-// respomsibly. Function was taken from Monocypher crypto library.
-// Note that macro WIPE is then used in WIPE_PT to wipe 
+// Note that macro WIPE_PT uses macro WIPE_BUFFER to wipe 
 // ristretto255_point which structure is defined in helpers.h
-#define WIPE(felem) crypto_wipe(felem, sizeof(felem))
+// Macro WIPE_BUFFER uses crypto_wipe function implemented also 
+// in helpers.h. It is wiping function that makes sure we clear memory 
+// respomsibly. Function was taken from Monocypher crypto library.
+// For more information see helper.h.
 #define WIPE_PT(rpoint) wipe_ristretto255_point(rpoint)
 // functions redefined below are "renamed" to fit our equivalent 
 // TweetNaCl representation of ristretto255
-#define swap25519 gf25519Swap     // 2*4B
+#define swap25519 gf25519Swap     // 8B
 #define fsub gf25519Sub           // 60B + 3size_t 
 #define fadd gf25519Add           // 60B + 3size_t 
-#define fmul gf25519Mul           // 2xsize_t + 80B + 52B + 2size_t = 132B+ 4size_t
+#define fmul gf25519Mul           // 132B+ 4size_t
 #define pow2 gf25519Sqr           // 132B + 4size_t
 #define pow_xtimes gf25519Pwr2    // 132B + 5size_t
-#define fselect gf25519Select     // 4B + size_t
 #define feq !gf25519Comp          // 4B + size_t
 #define carry25519(out, in) gf25519Red(out, in) //  52B + 2size_t 
 #define b_copy gf25519Copy        // size_t
 #define fcopy gf25519Copy         // size_t
+
+#ifdef USE_GF25519SELECT
+#define fselect gf25519Select     // 4B + size_t
+#endif
 
 // Setting "order" during pack/unpack w respect to BIGENDIAN_FLAG
 // Note that we are using pack/unpack terminology just for copying data.
@@ -155,10 +158,10 @@ void unpack(u32* uint32Array, const u8* uint8Array) {
 // Note that macro WIPE uses wipe_field_elem() function
 // implemented in utils.c
 void wipe_ristretto255_point(ristretto255_point* ristretto_in){
-  WIPE(ristretto_in->x);
-  WIPE(ristretto_in->y);
-  WIPE(ristretto_in->z);
-  WIPE(ristretto_in->t);
+  WIPE_BUFFER(ristretto_in->x);
+  WIPE_BUFFER(ristretto_in->y);
+  WIPE_BUFFER(ristretto_in->z);
+  WIPE_BUFFER(ristretto_in->t);
 
 }
 
@@ -224,7 +227,7 @@ void fabsolute(field_elem out, field_elem in){
     // CT_SWAP if it is neg.
     swap25519(out,temp,is_neg(in));
 
-    WIPE(temp);
+    WIPE_BUFFER(temp);
 }
 
 
@@ -320,12 +323,11 @@ static int inv_sqrt(field_elem out,const field_elem a, const field_elem b){
    //Calc v = i*r
    fmul(v, SQRT_M1, out);
    /**
-     * Note we can select between 
+     * Note we can select between swap25519 and fselect functions.
+     * We prefer (default) to use swap25519, bcs. less code is needed.
+     * Feel free to change it as u need in config.h
+     * if cond = 1, select first option fselect and swap25519
    **/
-
-   // We prefer (default) to use swap25519, bcs. less code is needed.
-   // Feel free to change it as u need in config.h
-   // if cond = 1, select first option fselect and swap25519
    #ifdef USE_GF25519SELECT
    fselect(out, out, v, flipped_sign_sqrt | flipped_sign_sqrt_i ); 
    #else
@@ -341,7 +343,7 @@ static int inv_sqrt(field_elem out,const field_elem a, const field_elem b){
    swap25519(out, v, is_neg(out)); 
    #endif  
 
-   WIPE(c); WIPE(v);
+   WIPE_BUFFER(c); WIPE_BUFFER(v);
    return correct_sign_sqrt | flipped_sign_sqrt;
 }
 
@@ -359,7 +361,7 @@ static int inv_sqrt(field_elem out,const field_elem a, const field_elem b){
 // curve with coords X,Y,Z,T
 // MAP is also called ristretto255_elligator
 
-// Note that we redefined temporary variables multiple time
+// Note that we redefined temporary variables multiple times
 // just to make code more readible. We also added comments
 // at the end of the lines, so you will be able to compare
 // every line with draft specification.
@@ -370,6 +372,7 @@ static void MAP(ristretto255_point* ristretto_out, const field_elem t){
     field_elem tmp1, tmp2, tmp3, tmp4, tmp5;
     int was_square, wasnt_square;
 
+    // TODO: dopln 
     #define _r tmp1
     #define out tmp2
     #define c tmp3
@@ -429,8 +432,8 @@ static void MAP(ristretto255_point* ristretto_out, const field_elem t){
     fmul(ristretto_out->z,w1,w3);         // w1*w3 
     fmul(ristretto_out->t,w0,w2);         // w0*w2
 
-    WIPE(ss); WIPE(w2); WIPE(w0);
-    WIPE(w1); WIPE(w3);
+    WIPE_BUFFER(ss); WIPE_BUFFER(w2); WIPE_BUFFER(w0);
+    WIPE_BUFFER(w1); WIPE_BUFFER(w3);
 }
 
 
@@ -450,7 +453,7 @@ static void MAP(ristretto255_point* ristretto_out, const field_elem t){
 // (just naming is different)
 // https://github.com/dominictarr/tweetnacl/blob/master/tweetnacl.c#L590
 
-// Note that we redefined temporary variables multiple time
+// Note that we redefined temporary variables multiple times
 // just to make code more readible.
 // *** STACKSIZE: 292B+ 4size_t ***
 void ristretto255_point_addition(ristretto255_point* r,const ristretto255_point* p,const ristretto255_point* q){
@@ -490,8 +493,8 @@ void ristretto255_point_addition(ristretto255_point* r,const ristretto255_point*
     fmul(r->z, g, f);
     fmul(r->t, e, h);
 
-    WIPE(d); WIPE(h); WIPE(g);
-    WIPE(f); WIPE(e);
+    WIPE_BUFFER(d); WIPE_BUFFER(h); WIPE_BUFFER(g);
+    WIPE_BUFFER(f); WIPE_BUFFER(e);
 }
 
 
@@ -522,7 +525,7 @@ static void cswap(ristretto255_point* p, ristretto255_point* q,u8 b){
 // Inspired by ristretto draft
 // generate ristretto point from bytes[32]
 
-// Note that we redefined temporary variables multiple time
+// Note that we redefined temporary variables multiple times
 // just to make code more readible. We also added comments
 // at the end of the lines, so you will be able to compare
 // every line with draft specification.
@@ -607,8 +610,8 @@ int ristretto255_decode(ristretto255_point *ristretto_out, const u8 bytes_in[BYT
 
   fcopy(ristretto_out->z, F_ONE);         // z is set to 1
 
-  WIPE(_s); WIPE(sDx); WIPE(u1);
-  WIPE(Dxv); WIPE(Dy); WIPE(_I);
+  WIPE_BUFFER(_s); WIPE_BUFFER(sDx); WIPE_BUFFER(u1);
+  WIPE_BUFFER(Dxv); WIPE_BUFFER(Dy); WIPE_BUFFER(_I);
 
   if (was_square == 0){
     #ifdef DEBUG_FLAG
@@ -641,7 +644,7 @@ int ristretto255_decode(ristretto255_point *ristretto_out, const u8 bytes_in[BYT
 // Inspired by ristretto draft
 // encodes ristretto255 point to 32-word u8[32] element
 
-// Note that we redefined temporary variables multiple time
+// Note that we redefined temporary variables multiple times
 // just to make code more readible. We also added comments
 // at the end of the lines, so you will be able to compare
 // every line with draft specification.
@@ -657,7 +660,7 @@ int ristretto255_encode(u8 bytes_out[BYTES_ELEM_SIZE], const ristretto255_point*
   #define temp_zy1 _temp1
   #define temp_zy2 _temp2
   #define u1_ _temp3
-  fadd(temp_zy1,ristretto_in->z,ristretto_in->y);    // z0+y0
+  fadd(temp_zy1,ristretto_in->z,ristretto_in->y);   // z0+y0
   fsub(temp_zy2,ristretto_in->z,ristretto_in->y);   // Z0-y0
   fmul(u1_,temp_zy1,temp_zy2);                      // u1=(z0+y0)(Z0-y0)
 
@@ -724,9 +727,9 @@ int ristretto255_encode(u8 bytes_out[BYTES_ELEM_SIZE], const ristretto255_point*
   
   pack25519(bytes_out,temp_s);
 
-  WIPE(enchanted_denominator); WIPE(Z_Y); WIPE(temp_s);
-  WIPE(_X); WIPE(_Y); WIPE(iX);
-  WIPE(iY);
+  WIPE_BUFFER(enchanted_denominator); WIPE_BUFFER(Z_Y); WIPE_BUFFER(temp_s);
+  WIPE_BUFFER(_X); WIPE_BUFFER(_Y); WIPE_BUFFER(iX);
+  WIPE_BUFFER(iY);
   return 0;
 }
 
@@ -798,7 +801,8 @@ int hash_to_group(u8 bytes_out[BYTES_ELEM_SIZE], const u8 bytes_in[HASH_BYTES_SI
   * @param[in]   -> s ==> scalar 
   * @param[out]  -> p ristretto255_point
 **/
-// ristretto255_scalarmult() => scalar multiplication ristretto_point q * scalar s
+// ristretto255_scalarmult() => scalar multiplication 
+// ristretto_point q * scalar s
 // Note that scalar "s" is represented as u8[32]
 // Inspired by tweetNaCl: https://github.com/dominictarr/tweetnacl/blob/master/tweetnacl.c#L632
 // *** STACKSIZE: 293B+ 4size_t +int***
