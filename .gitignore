@@ -2,3 +2,5 @@
 /links
 main.exe
 .gitignore
+*.o
+*.exe

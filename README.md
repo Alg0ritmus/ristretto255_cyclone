@@ -3,6 +3,13 @@ C - `comp.bat`(windows) <br>
 # Progress:
 
 
+## 6.10.2023
+Pridany pokec ku kodom<br>
+Pridanie python impl. pre modL inverse<br>
+TODO:
+	- Nie je mi celkom jasne ako autori kniznice monocypher<br>
+	dostali hodnoty k premennym [`r`](https://github.com/Alg0ritmus/ristretto255_cyclone/blob/main/modl.c#L111) a [`k`](https://github.com/Alg0ritmus/ristretto255_cyclone/blob/main/modl.c#L195), resp. nieco mi unika...<br>
+
 ## 24.9.2023
 Pridany pokec + info o hlbke zasobnika (mozno prediskutovat)<br>
 Dodany test na inverziu.<br>
