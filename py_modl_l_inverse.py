@@ -86,7 +86,7 @@ def scalar_bit(in_a, i):
 		return 0
 	return int(in_a_str[i])
 
-def Xoruj(a,b):
+def XOR(a,b):
 	# a xor b
 	if len(a)!=len(b):
 		raise ValueError(f"a:{len(a)} in not eq to b{len(b)}")
@@ -114,7 +114,7 @@ def inverse_mod_l(a_in):
 #------------------------------
 
 ## TEST OF FUNCTION modl_l_inverse()
-def generate_modl_l_inverse_test_vector(IN_hex:int, k_hex: int, rounds:int):
+def generate_modl_l_inverse_test_vector(IN_hex:list[int], k_hex: int, rounds:int):
 	k = [k_hex for i in range(32)]
 	k_num = Converter.hexToNum(k,INTERPRETATION.U32,False)
 	IN = Converter.hexToNum(IN_hex,INTERPRETATION.U32,False)
@@ -125,7 +125,7 @@ def generate_modl_l_inverse_test_vector(IN_hex:int, k_hex: int, rounds:int):
 
 		r_32 = Converter.numToHex(r,INTERPRETATION.U32,False)
 		
-		IN = Converter.hexToNum(Xoruj(r_32,k),INTERPRETATION.U32,False)
+		IN = Converter.hexToNum(XOR(r_32,k),INTERPRETATION.U32,False)
 
 	print("Result:")
 	Converter.numToHex(IN,INTERPRETATION.U32,True)

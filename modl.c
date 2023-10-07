@@ -108,7 +108,14 @@ static void remove_l(u32 r[8], const u32 x[8]){
 // Full reduction modulo L (Barrett reduction)
 void mod_l(u8 reduced[32], const u32 x[16]){
    size_t i, j;
-    static const u32 r[9] = { // precomputed value for internal purposes 
+    // r[9] is precomputed value for internal purposes 
+    // used during calculation in Barrett reduction algorithm.
+    // r :=  b^(2k)/L, where:
+    // b := 2^32,  number of combinations in a 1 word (u32 -> 32bits)
+    // k := 8, number of words of modulus (u32 L[8])
+    // formula := floor(b^2k/L)
+    // floor(b^2k/L) = floor((2^32)^16/L) = floor(2^512/L)
+    static const u32 r[9] = { 
         0x0a2c131b,0xed9ce5a3,0x086329a7,0x2106215d,
         0xffffffeb,0xffffffff,0xffffffff,0xffffffff,0xf,
     };
@@ -185,13 +192,16 @@ static void load32_le_buf (u32 *dst, const u8 *src, size_t size) {
 //   x < L * 2^256
 // Constants:
 //   r = 2^256                 (makes division by r trivial)
-//   k = (r * (1/r) - 1) // L  (1/r is computed modulo L   )
+//   k = (r * (1/r) - 1) // L  (1/r is computed modulo L, note that this is done by inverse modL)
 // Algorithm:
 //   s = (x * k) % r
 //   t = x + s*L      (t is always a multiple of r)
 //   u = (t/r) % L    (u is always below 2*L, conditional subtraction is enough)
 static void redc(u32 u[8], u32 x[16])
 {
+    // k = (r * (1/r) - 1) // L  (1/r is computed modulo L, note that this is done by inverse modL)
+    // Note that pseudo code would look like this: (r * inv_mod_l(1,r) - 1) // L
+    // where '//' denotes  floor division e.g. 4//3 = 1 
     static const u32 k[8] = {
         0x12547e1b, 0xd2b51da3, 0xfdba84ff, 0xb1a206f2,
         0xffa36bea, 0x14e75438, 0x6fe91836, 0x9db6c6f2,

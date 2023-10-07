@@ -2,6 +2,9 @@
 C - `comp.bat`(windows) <br>
 # Progress:
 
+## 7.10.2023
+Dodany komentar k premennym `r` a `k`.<br>
+<br>
 
 ## 6.10.2023
 Pridany pokec ku kodom<br>
