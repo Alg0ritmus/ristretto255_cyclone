@@ -26,11 +26,11 @@
 /** *****************************************************************
 	* We use USE_GF25519SELECT to allow you to choose whether
 	* you want to use gf25519Select or gf25519Swap. Both of these
-	* functions are defined in the file gf25519.h. Note that originally,
+	* functions are declared in the file gf25519.h. Note that originally,
 	* CT_SELECT was used in the Ristretto255 draft 
 	* (https://datatracker.ietf.org/doc/draft-irtf-cfrg-ristretto255-decaf448/). 
 	* However, we decided to primarily use just one function
-	* (gf25519Swap). Please note that gf25519Swap is also defined
+	* (gf25519Swap). Please note that gf25519Swap is also declared
 	* in gf25519.h. Be aware that both of these functions were
 	* originally taken and slightly changed from the crypto
 	* library Cyclone (https://github.com/Oryx-Embedded/CycloneCRYPTO/blob/master/ecc/curve25519.c).

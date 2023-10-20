@@ -32,10 +32,10 @@
 // Dependencies
 // included definition of types like u8, u32... + FOR macros, etc.
 #include "helpers.h" 
+#include "utils.h"
 
 void store32_le_buf(u8 *dst, const u32 *src, size_t size);
 void mod_l(u8 reduced[BYTES_ELEM_SIZE], const u32 x[16]);
-void crypto_wipe(void *secret, size_t size);
 /**
 	* Here, we prepared 2 ways of computing modular inverse (mod L).
 	* Using Barrett’s reduction: inverse_mod_l; and Montgomery’s

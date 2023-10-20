@@ -304,8 +304,9 @@ void crypto_x25519_inverse(u8 out[BYTES_ELEM_SIZE], const u8 in[BYTES_ELEM_SIZE]
 // Feature for Big Endian architecture is not implemented (yet). 
 static void multiply_mod_l(u32 r[8], const u32 a[8], const u32 b[8]){
     u32 c[16] = {0};
-        multiply(c, a, b);
-        mod_l((u8*) r, c);
+    multiply(c, a, b);
+    mod_l((u8*) r, c);
+    WIPE_BUFFER(c);
 }
 
 
@@ -329,5 +330,6 @@ void inverse_mod_l(u8 out[BYTES_ELEM_SIZE], const u8 in[BYTES_ELEM_SIZE]){
     }
     int i;
     COPY(i ,out, (u8*) m_inv, BYTES_ELEM_SIZE);
+    WIPE_BUFFER(m_inv);
 }
 #endif

@@ -93,7 +93,7 @@
 #include "modl.h"
 
 // Note that macro WIPE_PT uses macro WIPE_BUFFER to wipe 
-// ristretto255_point which structure is defined in helpers.h
+// ristretto255_point which structure is declared in helpers.h
 // Macro WIPE_BUFFER uses crypto_wipe function implemented also 
 // in helpers.h. It is wiping function that makes sure we clear memory 
 // respomsibly. Function was taken from Monocypher crypto library.
@@ -157,7 +157,7 @@ void unpack(u32* uint32Array, const u8* uint8Array) {
 // Wiping ristretto255 point, using WIPE macro
 // Note that macro WIPE uses wipe_field_elem() function
 // implemented in utils.c
-void wipe_ristretto255_point(ristretto255_point* ristretto_in){
+static void wipe_ristretto255_point(ristretto255_point* ristretto_in){
   WIPE_BUFFER(ristretto_in->x);
   WIPE_BUFFER(ristretto_in->y);
   WIPE_BUFFER(ristretto_in->z);

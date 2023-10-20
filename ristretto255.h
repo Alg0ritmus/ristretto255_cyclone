@@ -91,6 +91,7 @@ int ristretto255_decode(ristretto255_point *ristretto_out, const u8 bytes_in[BYT
 int ristretto255_encode(u8 bytes_out[BYTES_ELEM_SIZE], const ristretto255_point *ristretto_in);
 int hash_to_group(u8 bytes_out[BYTES_ELEM_SIZE], const u8 bytes_in[HASH_BYTES_SIZE]);
 void ristretto255_scalarmult(ristretto255_point* p, ristretto255_point* q,const u8 *s);
+void ristretto255_point_addition(ristretto255_point* r,const ristretto255_point* p,const ristretto255_point* q);
 int bytes_eq_32( const u8 a[BYTES_ELEM_SIZE],  const u8 b[BYTES_ELEM_SIZE]);
 void fneg(field_elem out, field_elem in);
 int is_neg(field_elem in);
