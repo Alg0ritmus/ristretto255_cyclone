@@ -3,6 +3,15 @@ C - `comp.bat`(windows) <br>
 # Progress:
 
 ## 7.10.2023
+Edit Python scriptu pre generovanie test. vektorov (pre modl_l_inverse).<br>
+Script je spraveny tak, aby po jeho spusteni automaticky zmenil hodnoty v subore `test_config.h`.<br>
+Script sa spusta klasicky pomocou cmd prikazu `python modl_l_inverse.py`.<br>
+Cistenie kodu  + pridanie komentarov ku kodu.<br>
+PS:
+  V hlavickach nie je zatial zmeneny datu poslednej upravy/ verzie, pracujem na zautomatizovani.<br>
+<br>
+
+## 7.10.2023
 Dodany komentar k premennym `r` a `k`.<br>
 <br>
 
