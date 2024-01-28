@@ -169,6 +169,15 @@ static void wipe_ristretto255_point(ristretto255_point* ristretto_in){
 #define pack25519 pack
 #define unpack25519 unpack
 
+
+static void GF_RED(field_elem out, field_elem in){
+  // this should reduce input that is in modulo 2P repr.
+  // into modulo P repr.
+
+  // now it just copy input to output
+  memcpy(out, in, 32);
+}
+
 /**
   * @brief Negation of field_elem
   * @param[in]   -> in
@@ -179,7 +188,11 @@ static void wipe_ristretto255_point(ristretto255_point* ristretto_in){
 // inspired by: https://github.com/jedisct1/libsodium/blob/master/src/libsodium/include/sodium/private/ed25519_ref10_fe_51.h#L94
 // *** STACKSIZE: u8[32] = 60B + 3size_t  ***
 void fneg(field_elem out, field_elem in){
-    fsub(out, F_MODULUS, in);
+    // To make calculation in 2P correctly, 
+    // we need to perform REDC(in) and subsequently perform out = 2^255-19 - in 
+    field_elem auxiliary; // note that we need auxiliary variable 
+    GF_RED(auxiliary,in);
+    fsub(out, F_MODULUS, auxiliary);
 
 };
 
@@ -197,8 +210,13 @@ void fneg(field_elem out, field_elem in){
 // inspired by: https://github.com/jedisct1/libsodium/blob/master/src/libsodium/include/sodium/private/ed25519_ref10_fe_25_5.h#L302
 // *** STACKSIZE: u8[32] = 32B ***
 int is_neg(field_elem in){
+    // To make calculation in 2P correctly, 
+    // we need to perform REDC(in) and subsequently perform out = 2^255-19 - in 
+    field_elem auxiliary; // note that we need auxiliary variable 
+    GF_RED(auxiliary,in);
+
     u8 temp[BYTES_ELEM_SIZE];
-    pack25519(temp, in);
+    pack25519(temp, auxiliary);
     return temp[0] & 1;
 }
 
@@ -372,7 +390,6 @@ static void MAP(ristretto255_point* ristretto_out, const field_elem t){
     field_elem tmp1, tmp2, tmp3, tmp4, tmp5;
     int was_square, wasnt_square;
 
-    // TODO: dopln 
     #define _r tmp1
     #define out tmp2
     #define c tmp3
