@@ -2,6 +2,27 @@
 C - `comp.bat`(windows) <br>
 # Progress:
 
+## 29.01.2024
+Vlozenie, zatial dummy funkcie `fe25519_reduce_emil(in)`, ktora vo vysledku vykona redukciu z 'mod 2P' do 'mod_P', pretoze chceme vyuzit ASM aritmetiku, kt. pracuje v 2P. Zmeny su vykonane v subore
+`ristretto255.c`, vo funkciach `is_neg()` a `fneg()`
+
+Update vsetkych hlaviciek na verziu 0.2.0, v kazdom subore je zmenena verzia a aktualny datum.
+
+Postup updatovania suborov:
+Pri akychkolvek upravach sa bude updatovat verzia v kazdom subore (aj nedotknutom), no datum sa
+bude upravovat len v suboroch, kt. boli akokolvek zmenene.<br>
+
+Do buducna budu vsetky zmeny pisane v readme a pri kazdej zmene bude symbol oznacujuci typ zmeny: <br>
+[+] -> oznacenie pre pridanie kodu <br>
+[-] -> oznacenie pre odobratie kodu <br>
+[U]	-> oznacenie pre update kodu <br>
+
+napr. pre dnesne zmeny: <br>
+[+] -> `fe25519_reduce_emil(in)` funkcie do `ristretto255.c` <br>
+[U] -> `is_neg()`, `fneg()` priprava pre nasledujucu podporu 2P operacii v ASM <br>
+[U] -> `ALL FIELS`, zmena hlaviciek <br>
+
+
 ## 20.10.2023
 Edit Python scriptu pre generovanie test. vektorov (pre modl_l_inverse).<br>
 Script je spraveny tak, aby po jeho spusteni automaticky zmenil hodnoty v subore `test_config.h`.<br>

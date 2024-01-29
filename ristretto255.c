@@ -5,8 +5,8 @@
 // ------------ THIS CODE IS A PART OF A MASTER'S THESIS ------------
 // ------------------------- Master thesis --------------------------
 // -----------------Patrik Zelenak & Milos Drutarovsky --------------
-// ---------------------------version 0.1.3 -------------------------
-// --------------------------- 30-09-2023 ---------------------------
+// ---------------------------version 0.2.0 -------------------------
+// --------------------------- 29-01-2024 ---------------------------
 // ******************************************************************
 
 /**
@@ -170,12 +170,14 @@ static void wipe_ristretto255_point(ristretto255_point* ristretto_in){
 #define unpack25519 unpack
 
 
-static void GF_RED(field_elem out, field_elem in){
+static void fe25519_reduce_emil(field_elem in){
   // this should reduce input that is in modulo 2P repr.
   // into modulo P repr.
 
-  // now it just copy input to output
-  memcpy(out, in, 32);
+  // just to avoid error: unused parameter 'in',
+  // we assign 'in' to 'in'
+  in = in;
+  return;
 }
 
 /**
@@ -190,9 +192,8 @@ static void GF_RED(field_elem out, field_elem in){
 void fneg(field_elem out, field_elem in){
     // To make calculation in 2P correctly, 
     // we need to perform REDC(in) and subsequently perform out = 2^255-19 - in 
-    field_elem auxiliary; // note that we need auxiliary variable 
-    GF_RED(auxiliary,in);
-    fsub(out, F_MODULUS, auxiliary);
+    fe25519_reduce_emil(in);
+    fsub(out, F_MODULUS, in);
 
 };
 
@@ -212,11 +213,10 @@ void fneg(field_elem out, field_elem in){
 int is_neg(field_elem in){
     // To make calculation in 2P correctly, 
     // we need to perform REDC(in) and subsequently perform out = 2^255-19 - in 
-    field_elem auxiliary; // note that we need auxiliary variable 
-    GF_RED(auxiliary,in);
+    fe25519_reduce_emil(in);
 
     u8 temp[BYTES_ELEM_SIZE];
-    pack25519(temp, auxiliary);
+    pack25519(temp, in);
     return temp[0] & 1;
 }
 
