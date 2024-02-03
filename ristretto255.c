@@ -211,9 +211,6 @@ void fneg(field_elem out, field_elem in){
 // inspired by: https://github.com/jedisct1/libsodium/blob/master/src/libsodium/include/sodium/private/ed25519_ref10_fe_25_5.h#L302
 // *** STACKSIZE: u8[32] = 32B ***
 int is_neg(field_elem in){
-    // To make calculation in 2P correctly, 
-    // we need to perform REDC(in) and subsequently perform out = 2^255-19 - in 
-    fe25519_reduce_emil(in);
 
     u8 temp[BYTES_ELEM_SIZE];
     pack25519(temp, in);
@@ -239,6 +236,7 @@ int is_neg_bytes(const u8 in[BYTES_ELEM_SIZE]){
 // fabsolute functions gets absolute value of input in constant time 
 // *** STACKSIZE: 1x field_elem = 92B + 3size_t  ***
 void fabsolute(field_elem out, field_elem in){
+    fe25519_reduce_emil(in);
     field_elem temp;
     fcopy(temp,in); // temp=in, so I dont rewrite in
     fneg(out,temp); // out = ~in
@@ -329,13 +327,16 @@ static int inv_sqrt(field_elem out,const field_elem a, const field_elem b){
    fmul(c, c, b);
 
    //Conditions:
+   fe25519_reduce_emil(c);
+   fe25519_reduce_emil((u32 *)a);
    correct_sign_sqrt = feq(c, a);
 
-   fneg(v,(uint32_t *)a);
+   fneg(v,(u32 *)a);
    flipped_sign_sqrt = feq(c, v);
 
 
    fmul(v, v, SQRT_M1);
+   fe25519_reduce_emil(v);
    flipped_sign_sqrt_i = feq(c, v);
 
    //Calc v = i*r
@@ -354,6 +355,7 @@ static int inv_sqrt(field_elem out,const field_elem a, const field_elem b){
 
   // calc v = -r
    fneg(v,out);
+   fe25519_reduce_emil(out);
    // if cond = 1, select first option
    #ifdef USE_GF25519SELECT
    fselect(out, out, v, is_neg(out)); 
@@ -510,6 +512,11 @@ void ristretto255_point_addition(ristretto255_point* r,const ristretto255_point*
     fmul(r->z, g, f);
     fmul(r->t, e, h);
 
+    fe25519_reduce_emil(r->x);
+    fe25519_reduce_emil(r->y);
+    fe25519_reduce_emil(r->z);
+    fe25519_reduce_emil(r->t);
+
     WIPE_BUFFER(d); WIPE_BUFFER(h); WIPE_BUFFER(g);
     WIPE_BUFFER(f); WIPE_BUFFER(e);
 }
@@ -627,6 +634,10 @@ int ristretto255_decode(ristretto255_point *ristretto_out, const u8 bytes_in[BYT
 
   fcopy(ristretto_out->z, F_ONE);         // z is set to 1
 
+  fe25519_reduce_emil(ristretto_out->x);
+  fe25519_reduce_emil(ristretto_out->y);
+  fe25519_reduce_emil(ristretto_out->t);
+
   WIPE_BUFFER(_s); WIPE_BUFFER(sDx); WIPE_BUFFER(u1);
   WIPE_BUFFER(Dxv); WIPE_BUFFER(Dy); WIPE_BUFFER(_I);
 
@@ -709,6 +720,7 @@ int ristretto255_encode(u8 bytes_out[BYTES_ELEM_SIZE], const ristretto255_point*
   
   // note: we used swap25519 instead of fselect so our logic
   // is little bit different here
+  fe25519_reduce_emil(tZinv);
   int is_tZinv_neg = 1-is_neg(tZinv);     // IS_NEGATIVE(t0 * z_inv)
   #define _X _temp4
   #define _Y _temp5
@@ -728,6 +740,7 @@ int ristretto255_encode(u8 bytes_out[BYTES_ELEM_SIZE], const ristretto255_point*
   #define n_Y _temp2
   fneg(n_Y,iX);                           // -(x * z_inv)
   fcopy(iX,iX); 
+  fe25519_reduce_emil(XZ_inv);
   swap25519(iX,n_Y,is_neg(XZ_inv));       // y = CT_SELECT(-y IF IS_NEGATIVE(x * z_inv) ELSE y)
 
   #define _Z _temp3
