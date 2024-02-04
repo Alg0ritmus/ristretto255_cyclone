@@ -2,6 +2,11 @@
 C - `comp.bat`(windows) <br>
 # Progress:
 
+## 4.2.2024
+[+] -> Pridanie emil-redukcii pre podporu aritmetiky 2P,vsade kde je to potrebne (snad). <br>
+[+] -> Script na obnovu hlaviciek <br>
+[U] -> update hlaviciek <br>
+
 ## 29.01.2024
 Vlozenie, zatial dummy funkcie `fe25519_reduce_emil(in)`, ktora vo vysledku vykona redukciu z 'mod 2P' do 'mod_P', pretoze chceme vyuzit ASM aritmetiku, kt. pracuje v 2P. Zmeny su vykonane v subore
 `ristretto255.c`, vo funkciach `is_neg()` a `fneg()`
