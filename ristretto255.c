@@ -575,7 +575,8 @@ int ristretto255_decode(ristretto255_point *ristretto_out, const u8 bytes_in[BYT
   // check if bytes_in == checked_bytes, else abort
   is_canonical = bytes_eq_32(checked_bytes,bytes_in);
   is_negative = is_neg_bytes(bytes_in);
-
+  
+  printf("ristretto255_decode: is_canonical=%d, is_negative=%d\n", is_canonical, is_negative);
   if (is_canonical == 0 || is_negative==1){
     #ifdef DEBUG_FLAG
         printf("ristretto255_decode: Bad encoding or neg bytes passed to the ristretto255_decode function! is_canonical=%d, is_negative=%d\n", is_canonical, is_negative);
@@ -603,6 +604,8 @@ int ristretto255_decode(ristretto255_point *ristretto_out, const u8 bytes_in[BYT
   fmul(duu1_positive,EDWARDS_D,uu1);      // D*u1^2
   #define duu1 temp5
   fneg(duu1,duu1_positive);               // -(D * u1^2) 
+  printf("ristretto255_decode: fneg(duu1,duu1_positive) ==\n  ");
+  print_32((u8*)duu1);
 
   #define uu2 temp6
   pow2(uu2,u2);                           // u2^2
@@ -624,6 +627,8 @@ int ristretto255_decode(ristretto255_point *ristretto_out, const u8 bytes_in[BYT
   fmul(sDx,_s,Dx);                        // s*den_x
   fadd(ristretto_out->x,sDx,sDx);         // 2*s*den_x
   fabsolute(ristretto_out->x,ristretto_out->x); // x = CT_ABS(2 * s * den_x)
+  printf("ristretto255_decode: fabsolute(ristretto_out->x,ristretto_out->x) ==\n  ");
+  print_32((u8*)ristretto_out->x);
 
   #define Dy temp5
   fmul(Dy, _I, Dxv);                      // den_y = invsqrt * den_x * v
@@ -641,18 +646,21 @@ int ristretto255_decode(ristretto255_point *ristretto_out, const u8 bytes_in[BYT
   WIPE_BUFFER(_s); WIPE_BUFFER(sDx); WIPE_BUFFER(u1);
   WIPE_BUFFER(Dxv); WIPE_BUFFER(Dy); WIPE_BUFFER(_I);
 
+  printf("ristretto255_decode: was_square = inv_sqrt(_I,F_ONE,vuu2) == %d\n\n",was_square);
   if (was_square == 0){
     #ifdef DEBUG_FLAG
       printf("\n\n\n ristretto255_decode: Bad encoding! was_square=%d \n\n\n",was_square);
     #endif
     return 1;
   }
+  printf("ristretto255_decode: is_neg(ristretto_out->t) == %d\n\n",is_neg(ristretto_out->t));
   if (is_neg(ristretto_out->t)){
     #ifdef DEBUG_FLAG
       printf("\n\n\n ristretto255_decode: Bad encoding! is_neg(t)=%d \n\n\n",is_neg(ristretto_out->t));
     #endif
     return 1;
   }
+  printf("ristretto255_decode: was_square = feq(ristretto_out->y,F_ZERO) == %d\n\n",feq(ristretto_out->y,F_ZERO));
   if (feq(ristretto_out->y,F_ZERO)){
     #ifdef DEBUG_FLAG
       printf("\n\n\n ristretto255_decode: Bad encoding! feq(y,F_ZERO)=%d \n\n\n",feq(ristretto_out->y,F_ZERO));
@@ -721,6 +729,10 @@ int ristretto255_encode(u8 bytes_out[BYTES_ELEM_SIZE], const ristretto255_point*
   // note: we used swap25519 instead of fselect so our logic
   // is little bit different here
   fe25519_reduce_emil(tZinv);
+  printf("ristretto255_encode: fe25519_reduce_emil(tZinv) ==\n  ");
+  print_32((u8*)tZinv);
+
+  printf("ristretto255_encode: 1-is_neg(tZinv) == %d\n\n",1-is_neg(tZinv));
   int is_tZinv_neg = 1-is_neg(tZinv);     // IS_NEGATIVE(t0 * z_inv)
   #define _X _temp4
   #define _Y _temp5
@@ -739,8 +751,14 @@ int ristretto255_encode(u8 bytes_out[BYTES_ELEM_SIZE], const ristretto255_point*
   fmul(XZ_inv,iY,Zinv);                   // x * z_inv
   #define n_Y _temp2
   fneg(n_Y,iX);                           // -(x * z_inv)
+  printf("ristretto255_encode: fneg(n_Y,iX) ==\n  ");
+  print_32((u8*)n_Y);
   fcopy(iX,iX); 
   fe25519_reduce_emil(XZ_inv);
+  printf("ristretto255_encode: fe25519_reduce_emil(XZ_inv) ==\n  ");
+  print_32((u8*)XZ_inv);
+
+  printf("ristretto255_encode: is_neg(XZ_inv) == %d\n\n",is_neg(XZ_inv));
   swap25519(iX,n_Y,is_neg(XZ_inv));       // y = CT_SELECT(-y IF IS_NEGATIVE(x * z_inv) ELSE y)
 
   #define _Z _temp3
@@ -754,6 +772,8 @@ int ristretto255_encode(u8 bytes_out[BYTES_ELEM_SIZE], const ristretto255_point*
 
 
   fabsolute(temp_s,temp_s);               // s = CT_ABS(den_inv * (z - y))
+  printf("ristretto255_encode: fe25519_reduce_emil(XZ_inv) ==\n  ");
+  print_32((u8*)temp_s);
   
   pack25519(bytes_out,temp_s);
 
