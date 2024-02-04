@@ -88,54 +88,67 @@ int main(){
 
 
     
-    int result = 1;
-    int subresult = 1;
-    //temporary variables
-    u8 bytes_out_[BYTES_ELEM_SIZE] = {0};
-    field_elem in;
-    ristretto255_point output_ristretto_point;
-    ristretto255_point *out_rist = &output_ristretto_point;
-    ristretto255_point output_ristretto_point2;
-    ristretto255_point *out_rist2 = &output_ristretto_point2;
+    // int result = 1;
+    // int subresult = 1;
+    // //temporary variables
+    // u8 bytes_out_[BYTES_ELEM_SIZE] = {0};
+    // field_elem in;
+    // ristretto255_point output_ristretto_point;
+    // ristretto255_point *out_rist = &output_ristretto_point;
+    // ristretto255_point output_ristretto_point2;
+    // ristretto255_point *out_rist2 = &output_ristretto_point2;
+
     
+    field_elem IN = {1789990106, 1594525177 ,1379114410 ,2199126941,638809508,1871215656,3682138967,1033384386};
+    field_elem OUT = {0,0,0,0,0,0,0,0};
+    fneg(OUT, IN);
+    print_32((u8*)IN);  // da 14 b1 6a f9 85 0a 5f aa 9d 33 52 9d 03 14 83 a4 75 13 26 28 7c 88 6f 57 fb 78 db c2 31 98 3d
+    print_32((u8*)OUT); // 13 eb 4e 95 06 7a f5 a0 55 62 cc ad 62 fc eb 7c 5b 8a ec d9 d7 83 77 90 a8 04 87 24 3d ce 67 42
+
+    // IN =  27859987956339371176144544258722197442749584937056382569693659479292821705946
+    // OUT = 30036056662318726535640948245621756483885407395763899450035132524663743114003
+    // CALC:
+ 
+    // fe25519_reduce_emil(IN); -> so we get IN into <0; P-1>
+    // fsub(OUT, F_MODULUS, IN); -> P-IN
 
     // TESTING A.1 -> small multiples of generator(basepoint) and encoding function 
 
-    for (int i = 0; i < 16; ++i)
-    {
-        INTG[0] = i;
-        printf("------------------------\n test %d.\n ------------------------\n",i);
+    // for (int i = 0; i < 16; ++i)
+    // {
+    //     INTG[0] = i;
+    //     printf("------------------------\n test %d.\n ------------------------\n",i);
 
-        printf("\n--------------Decoding BASEPOINT:\n");
-        ristretto255_decode(out_rist,RISTRETTO255_BASEPOINT);
-        printf("BASEPOINT EDWARDS COORDS:\n");
-        print_32((u8 *)out_rist->x);
-        print_32((u8 *)out_rist->y);
-        print_32((u8 *)out_rist->z);
-        print_32((u8 *)out_rist->t);
-        printf("\n--------------END of Decoding BASEPOINT:\n\n");
+    //     printf("\n--------------Decoding BASEPOINT:\n");
+    //     ristretto255_decode(out_rist,RISTRETTO255_BASEPOINT);
+    //     printf("BASEPOINT EDWARDS COORDS:\n");
+    //     print_32((u8 *)out_rist->x);
+    //     print_32((u8 *)out_rist->y);
+    //     print_32((u8 *)out_rist->z);
+    //     print_32((u8 *)out_rist->t);
+    //     printf("\n--------------END of Decoding BASEPOINT:\n\n");
         
-        printf("\n--------------%d x BASEPOINT:\n",i);
-        ristretto255_scalarmult(out_rist2, out_rist,INTG);
-        printf("--------------%d x BASEPOINT EDWARDS COORDS:\n",i);
-        print_32((u8 *)out_rist2->x);
-        print_32((u8 *)out_rist2->y);
-        print_32((u8 *)out_rist2->z);
-        print_32((u8 *)out_rist2->t);
-        printf("\n--------------END of %d x BASEPOINT:\n\n",i);
+    //     printf("\n--------------%d x BASEPOINT:\n",i);
+    //     ristretto255_scalarmult(out_rist2, out_rist,INTG);
+    //     printf("--------------%d x BASEPOINT EDWARDS COORDS:\n",i);
+    //     print_32((u8 *)out_rist2->x);
+    //     print_32((u8 *)out_rist2->y);
+    //     print_32((u8 *)out_rist2->z);
+    //     print_32((u8 *)out_rist2->t);
+    //     printf("\n--------------END of %d x BASEPOINT:\n\n",i);
 
-        printf("\n--------------Decoding BASEPOINT:\n");
-        ristretto255_encode(bytes_out_,out_rist2);
-        printf("--------------%d x BASEPOINT encoded into bytes:\n",i);
-        print_32(bytes_out_);
-        printf("\n--------------END of Decoding BASEPOINT:\n\n");
+    //     printf("\n--------------Decoding BASEPOINT:\n");
+    //     ristretto255_encode(bytes_out_,out_rist2);
+    //     printf("--------------%d x BASEPOINT encoded into bytes:\n",i);
+    //     print_32(bytes_out_);
+    //     printf("\n--------------END of Decoding BASEPOINT:\n\n");
 
-        subresult = bytes_eq_32(bytes_out_, SMALL_MULTIPLES_OF_GENERATOR_VECTORS[i]);
-        printf("subresult = %d\n\n\n",subresult);
+    //     subresult = bytes_eq_32(bytes_out_, SMALL_MULTIPLES_OF_GENERATOR_VECTORS[i]);
+    //     printf("subresult = %d\n\n\n",subresult);
 
 
-        if (i==1) break;
-    }
+    //     if (i==0) break;
+    // }
     
     return 0;
 }
