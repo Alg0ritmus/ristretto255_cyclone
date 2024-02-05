@@ -25,6 +25,7 @@ for file_path in arr:
     def increment_patch(version):
         major, minor, patch = map(int, version.split('.'))
         new_patch = patch + 1
+        major, minor = 'T','T'
         new_version = f"{major}.{minor}.{new_patch}"
         return new_version
     

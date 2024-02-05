@@ -1,6 +1,15 @@
+<h1>TESTOVACI REPOZITAR</h1>
+
 # Spustenie:
 C - `comp.bat`(windows) <br>
 # Progress:
+
+## 5.2.2024
+[U] -> Testovacie vektory v maine su teraz globane premenne. <br>
+[U] -> Uprava hlaviciek -> test verzie su znacene ako T.T.cislo. <br>
+[U] -> update fabsolute, teraz ma len 1 parameter. <br>
+[U] -> update fneg, najprv vypocet az ptm redukcia. <br>
+
 
 ## 4.2.2024
 [+] -> Pridanie emil-redukcii pre podporu aritmetiky 2P,vsade kde je to potrebne (snad). <br>
