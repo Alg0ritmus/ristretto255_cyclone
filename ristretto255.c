@@ -5,7 +5,7 @@
 // ------------ THIS CODE IS A PART OF A MASTER'S THESIS ------------
 // ------------------------- Master thesis --------------------------
 // -----------------Patrik Zelenak & Milos Drutarovsky --------------
-// ---------------------------version T.T.2 -------------------------
+// ---------------------------version T.T.3 -------------------------
 // --------------------------- 05-02-2024 ---------------------------
 // ******************************************************************
 
@@ -352,7 +352,6 @@ static int inv_sqrt(field_elem out,const field_elem a, const field_elem b){
    #endif
 
   // calc v = -r
-   fe25519_reduce_emil(out);
    fneg(v,out);
    // if cond = 1, select first option
    #ifdef USE_GF25519SELECT
@@ -510,10 +509,10 @@ void ristretto255_point_addition(ristretto255_point* r,const ristretto255_point*
     fmul(r->z, g, f);
     fmul(r->t, e, h);
 
-    fe25519_reduce_emil(r->x);
-    fe25519_reduce_emil(r->y);
-    fe25519_reduce_emil(r->z);
-    fe25519_reduce_emil(r->t);
+    //fe25519_reduce_emil(r->x);
+    //fe25519_reduce_emil(r->y);
+    //fe25519_reduce_emil(r->z);
+    //fe25519_reduce_emil(r->t);
 
     WIPE_BUFFER(d); WIPE_BUFFER(h); WIPE_BUFFER(g);
     WIPE_BUFFER(f); WIPE_BUFFER(e);
@@ -835,6 +834,10 @@ int hash_to_group(u8 bytes_out[BYTES_ELEM_SIZE], const u8 bytes_in[HASH_BYTES_SI
   MAP(b,ft2); // map(ristretto_elligator) second hal
 
   ristretto255_point_addition(r,a,b); // addition of 2 Edward's point
+  fe25519_reduce_emil(r->x);
+  fe25519_reduce_emil(r->y);
+  fe25519_reduce_emil(r->z);
+  fe25519_reduce_emil(r->t);
 
   ristretto255_encode(bytes_out, r);
 
@@ -866,6 +869,11 @@ void ristretto255_scalarmult(ristretto255_point* p, ristretto255_point* q,const 
     ristretto255_point_addition(p,p,p);
     cswap(p,q,b);
   }
+  fe25519_reduce_emil(p->x);
+  fe25519_reduce_emil(p->y);
+  fe25519_reduce_emil(p->z);
+  fe25519_reduce_emil(p->t);
+  
 }
 
 

@@ -4,6 +4,10 @@
 C - `comp.bat`(windows) <br>
 # Progress:
 
+## 5.2.2024 - v2
+[U] -> Uprava hlaviciek -> T.T.3. <br>
+[U] -> zmena v ristretto255.c -> snaha o optimalizaciu nasobenia -> neredukujem vzdy pri scinati bodu. <br>
+
 ## 5.2.2024
 [U] -> Testovacie vektory v maine su teraz globane premenne. <br>
 [U] -> Uprava hlaviciek -> test verzie su znacene ako T.T.cislo. <br>
