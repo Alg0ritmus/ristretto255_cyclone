@@ -5,8 +5,8 @@
 // ------------ THIS CODE IS A PART OF A MASTER'S THESIS ------------
 // ------------------------- Master thesis --------------------------
 // -----------------Patrik Zelenak & Milos Drutarovsky --------------
-// ---------------------------version T.T.3 -------------------------
-// --------------------------- 05-02-2024 ---------------------------
+// ---------------------------version T.T.4 -------------------------
+// --------------------------- 08-02-2024 ---------------------------
 // ******************************************************************
 
 /**
@@ -302,7 +302,7 @@ void crypto_x25519_inverse(u8 out[BYTES_ELEM_SIZE], const u8 in[BYTES_ELEM_SIZE]
 /********************* WARNING ********************************/
 // Functional only on CPU with Little Endian architecture!
 // Feature for Big Endian architecture is not implemented (yet). 
-static void multiply_mod_l(u32 r[8], const u32 a[8], const u32 b[8]){
+void multiply_mod_l(u32 r[8], const u32 a[8], const u32 b[8]){
     u32 c[16] = {0};
     multiply(c, a, b);
     mod_l((u8*) r, c);

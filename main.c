@@ -5,8 +5,8 @@
 // ------------ THIS CODE IS A PART OF A MASTER'S THESIS ------------
 // ------------------------- Master thesis --------------------------
 // -----------------Patrik Zelenak & Milos Drutarovsky --------------
-// ---------------------------version T.T.3 -------------------------
-// --------------------------- 05-02-2024 ---------------------------
+// ---------------------------version T.T.4 -------------------------
+// --------------------------- 08-02-2024 ---------------------------
 // ******************************************************************
 
 /**
@@ -29,9 +29,27 @@
 #include "gf25519.h"
 #include "modl.h"
 #include "test_config.h"
+#include "prng.h"
+#include "xxhash.h"
+#include "config.h"
 
 #define pack25519 pack
 #define unpack25519 unpack
+
+// AUXILIARY COMPLEX TEST VARIABLES
+u8 TEST[BYTES_ELEM_SIZE]; // rng bytes -> to ristretto point
+u8 SCALAR[BYTES_ELEM_SIZE]; // rng scalar
+u8 SCALAR_INV[BYTES_ELEM_SIZE]; // rng scalar inverse
+u8 SCALAR_STORAGE[BYTES_ELEM_SIZE] = {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+u8 TEST_ORIGIN_POINT[BYTES_ELEM_SIZE];
+u8 NEW_POINT[BYTES_ELEM_SIZE];
+
+ristretto255_point output_ristretto_pointX;
+ristretto255_point *bodA = &output_ristretto_pointX;
+ristretto255_point output_ristretto_pointX2;
+ristretto255_point *bodB = &output_ristretto_pointX2;
+ristretto255_point output_ristretto_pointX3;
+ristretto255_point *bodC = &output_ristretto_pointX3;
 
 
 // Non-canonical field encodings.
@@ -365,6 +383,144 @@ int main(){
         printf("***************************\n");
     }
 
+
+    // INIT xxHASH
+    XXH32_state_t *state = XXH32_createState();
+    uint32_t result_of_complex_tests;
+    const uint32_t xxhash_seed = 0x1234;
+
+    XXH32_reset(state, xxhash_seed);
+
+
+    // GENERATE VALID RISTRETTO POINT
+    int ristretto_point_obtained = 1;
+    while (ristretto_point_obtained)
+    {
+        rand_32_bytes(TEST);
+        gf25519Copy((u32*)TEST_ORIGIN_POINT,(u32*)TEST);
+        ristretto_point_obtained = ristretto255_decode(bodA,TEST);
+
+
+    }
+
+    // hash TEST_ORIGIN_POINT
+    XXH32_update(state, TEST_ORIGIN_POINT, BYTES_ELEM_SIZE);
+
+
+
+    // PERFORM TESTING, test rounds 'COMPLEX_TEST_INERATIONS'
+    // can be set in config.h
+    for (int i = 0; i < COMPLEX_TEST_INERATIONS; i++)
+    {
+        
+        rand_32_bytes(SCALAR); 
+        inverse_mod_l(SCALAR_INV,SCALAR);
+
+        // hash SCALAR and SCALAR_INV
+        XXH32_update(state, SCALAR, BYTES_ELEM_SIZE);
+        XXH32_update(state, SCALAR_INV, BYTES_ELEM_SIZE);
+        
+        ristretto255_encode(bytes_out_,bodA); // save bytes of P1 to comparison later
+        // NOTE that multiplying mutates values for both points 
+        ristretto255_scalarmult(bodB, bodA,SCALAR); // P1*k = P2
+        
+
+        ristretto255_encode(NEW_POINT,bodB);
+        ristretto_point_obtained = ristretto255_decode(bodB,NEW_POINT);
+        if (ristretto_point_obtained){
+            printf("idx: %d.) ERROR during test in decode\n",i);
+            break;
+        }
+
+        // hash NEW_POINT
+        XXH32_update(state, NEW_POINT, BYTES_ELEM_SIZE);
+
+        // intermediate checksum will be printed every CNT-th ineration
+        // CNT can be set in config.h
+        if (i % CNT == 0){
+            result_of_complex_tests = XXH32_digest(state);  
+            printf("Test no.%d, xxHash: %x\n",i,result_of_complex_tests);
+        }
+
+        ristretto255_scalarmult(bodC, bodB,SCALAR_INV); // P1*k*k^-1 = P1
+        
+        // check if: P1*k*k^-1 ?= P1
+        ristretto255_encode(TEST,bodC);
+        
+        
+        if (!bytes_eq_32(bytes_out_,TEST)){// return 1 if eq
+            printf("\nERROR when running test %d)\n",i);
+            break;
+        }
+
+        // assign P1 = P2 to repeat process
+        ristretto255_decode(bodA, NEW_POINT);
+
+        // store scalar
+        multiply_mod_l((u32*)SCALAR_STORAGE,(u32*)SCALAR_STORAGE,(u32*)SCALAR);
+
+    }
+
+    // hash SCALAR_STORAGE at the end
+    XXH32_update(state, SCALAR_STORAGE, BYTES_ELEM_SIZE);
+
+    inverse_mod_l(SCALAR_INV,SCALAR_STORAGE); // P1e6 last check
+    ristretto255_scalarmult(bodB, bodA,SCALAR_INV);
+    ristretto255_encode(bytes_out_,bodB);
+
+    // hash last point 
+    XXH32_update(state, bytes_out_, BYTES_ELEM_SIZE);
+    
+    int comparison_result = bytes_eq_32(bytes_out_,TEST_ORIGIN_POINT); // return 1 if eq
+    if (!comparison_result)
+    {
+        printf("\n*************************\n");
+        printf("-------COMPLEX TEST------\n\n");
+        printf("        TESTS FAILED!      \n");
+        printf("***************************\n");
+    }
+    else{
+        printf("\n*************************\n");
+        printf("-------COMPLEX TEST------\n\n");
+        printf("ALL TESTS RAN SUCCESSFULLY!\n");
+        printf("***************************\n");
+    }
+
+
+    result_of_complex_tests = XXH32_digest(state);   
+
+    printf("\nFinal xxHash Digest: %x",result_of_complex_tests);
+
+    # if 0 // just my testing of xxHash /PRGN
+    for (size_t i = 0; i < 10; i++)
+    {
+        rand_32_bytes(TEST);
+        print_32(TEST);
+    }
+
+
+    printf("testing xxHash\n");
+    XXH32_state_t *state = XXH32_createState();
+    uint32_t resultar;
+
+    XXH32_reset(state, TEST[0]);
+
+    XXH32_update(state, TEST, BYTES_ELEM_SIZE);
+
+    resultar = XXH32_digest(state);
+    
+
+    printf("\nresult1: %x \n",resultar);
+
+    // hash again
+
+    XXH32_update(state, TEST, BYTES_ELEM_SIZE);
+    resultar = XXH32_digest(state);
+
+    
+
+    printf("\nresult2: %x \n",resultar);
+    #endif
     return 0;
 }
 

@@ -4,6 +4,13 @@
 C - `comp.bat`(windows) <br>
 # Progress:
 
+## 8.2.2024
+[+] -> Pridanie PRNG z: https://rosettacode.org/wiki/Linear_congruential_generator#C<br>
+[+] -> Pridanie xxHash32 z: https://github.com/easyaspi314/xxhash-clean<br>
+[+] -> Tvorba komplexnych testov v `main.c` a zaroven dodanie novych vlajok v `config.h`<br>
+[U] -> Uprava hlaviciek -> T.T.4 <br>
+
+
 ## 5.2.2024 - v2
 [U] -> Uprava hlaviciek -> T.T.3. <br>
 [U] -> zmena v ristretto255.c -> snaha o optimalizaciu nasobenia -> neredukujem vzdy pri scinati bodu. <br>

@@ -5,8 +5,8 @@
 // ------------ THIS CODE IS A PART OF A MASTER'S THESIS ------------
 // ------------------------- Master thesis --------------------------
 // -----------------Patrik Zelenak & Milos Drutarovsky --------------
-// ---------------------------version T.T.3 -------------------------
-// --------------------------- 05-02-2024 ---------------------------
+// ---------------------------version T.T.4 -------------------------
+// --------------------------- 08-02-2024 ---------------------------
 // ******************************************************************
 
 /**
@@ -36,6 +36,7 @@
 
 void store32_le_buf(u8 *dst, const u32 *src, size_t size);
 void mod_l(u8 reduced[BYTES_ELEM_SIZE], const u32 x[16]);
+void multiply_mod_l(u32 r[8], const u32 a[8], const u32 b[8]);
 /**
 	* Here, we prepared 2 ways of computing modular inverse (mod L).
 	* Using Barrett’s reduction: inverse_mod_l; and Montgomery’s

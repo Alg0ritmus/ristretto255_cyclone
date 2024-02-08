@@ -5,8 +5,8 @@
 // ------------ THIS CODE IS A PART OF A MASTER'S THESIS ------------
 // ------------------------- Master thesis --------------------------
 // -----------------Patrik Zelenak & Milos Drutarovsky --------------
-// ---------------------------version T.T.3 -------------------------
-// --------------------------- 05-02-2024 ---------------------------
+// ---------------------------version T.T.4 -------------------------
+// --------------------------- 08-02-2024 ---------------------------
 // ******************************************************************
 
 /** *****************************************************************
@@ -103,5 +103,29 @@
 **/
 //#define MONTGOMERY_MODL_INVERSE_FLAG
 
+
+
+/** *****************************************************************
+	* We conducted a complex testing of our ristretto255 implementation. 
+	* Complex tests are suitable for evaluating every little change,  
+	* such as optimization tweaks in the code and more. Through 
+	* complex testing, we can identify differences and errors introduced
+	* into the codebase, allowing us to eliminate them.
+
+	* By using xxHash, a fast non-cryptographic function, we perform 
+	* checksum checks in multiple places during the test, 
+	* and at the end of the test the final digest is printed.
+
+	* Here, we can set FLAGS like COMPLEX_TEST_ITERATIONS, 
+	* which is the number of rounds for the test, and CNT, 
+	* which is an index used to print intermediate digests 
+	* (checksums) every CNT rounds.
+
+	* For example, if COMPLEX_TEST_ITERATIONS is set to 10 
+	* and CNT is set to 2, the test will run in 10 rounds,
+	* and the intermediate checksum will be printed every second round.
+**/
+#define COMPLEX_TEST_INERATIONS 10
+#define CNT 2
 
 #endif // _CONFIG_H

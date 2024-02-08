@@ -2,7 +2,7 @@ CC=gcc
 CFLAGS= -c -Os -Wall -Wno-unused-function -Werror -Wextra -Wno-unused-variable
 # NOTE: You can set various additional internal
 # flags in config.h
-SOURCES=main.c gf25519.c utils.c modl.c ristretto255.c
+SOURCES=main.c gf25519.c utils.c modl.c ristretto255.c prng.c xxhash.c
 OBJECTS=$(SOURCES:.c=.o)
 EXECUATBLE=main
 all: $(SOURCES) $(EXECUATBLE)
