@@ -4,6 +4,14 @@
 C - `comp.bat`(windows) <br>
 # Progress:
 
+## 10.2.2024
+[+] -> pridany popis k testu
+[+] -> nejake kozmeicke upravy spomenute v poznamkach
+[U] -> vymena malloc v xxHash -> zmeny v `xxhash.c/.h` <br>
+[U] -> moznost zmeny rseed z mainu -> funkcia `s_rand()` v `prng.c`<br>
+[U] -> fixnuta chyba pri nastaveni montgomeryho redukcie <br>
+[U] -> Uprava hlaviciek -> T.T.5 <br>
+
 ## 8.2.2024
 [+] -> Pridanie PRNG z: https://rosettacode.org/wiki/Linear_congruential_generator#C<br>
 [+] -> Pridanie xxHash32 z: https://github.com/easyaspi314/xxhash-clean<br>

@@ -5,8 +5,8 @@
 // ------------ THIS CODE IS A PART OF A MASTER'S THESIS ------------
 // ------------------------- Master thesis --------------------------
 // -----------------Patrik Zelenak & Milos Drutarovsky --------------
-// ---------------------------version T.T.4 -------------------------
-// --------------------------- 08-02-2024 ---------------------------
+// ---------------------------version T.T.5 -------------------------
+// --------------------------- 10-02-2024 ---------------------------
 // ******************************************************************
 
 /** *****************************************************************
@@ -101,7 +101,7 @@
 	* Uncomment this flag if you want to use Montgomery’s reduction
 	* or comment, if you want to use Barrett’s reduction.
 **/
-//#define MONTGOMERY_MODL_INVERSE_FLAG
+#define MONTGOMERY_MODL_INVERSE_FLAG
 
 
 

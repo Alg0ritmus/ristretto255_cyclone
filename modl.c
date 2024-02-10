@@ -5,8 +5,8 @@
 // ------------ THIS CODE IS A PART OF A MASTER'S THESIS ------------
 // ------------------------- Master thesis --------------------------
 // -----------------Patrik Zelenak & Milos Drutarovsky --------------
-// ---------------------------version T.T.4 -------------------------
-// --------------------------- 08-02-2024 ---------------------------
+// ---------------------------version T.T.5 -------------------------
+// --------------------------- 10-02-2024 ---------------------------
 // ******************************************************************
 
 /**
@@ -157,6 +157,13 @@ void mod_l(u8 reduced[32], const u32 x[16]){
     WIPE_BUFFER(xr);
 }
 
+void multiply_mod_l(u32 r[8], const u32 a[8], const u32 b[8]){
+    u32 c[16] = {0};
+    multiply(c, a, b);
+    mod_l((u8*) r, c);
+    WIPE_BUFFER(c);
+}
+
 
 /********************* WARNING ********************************/
 // Functional only on CPU with Little Endian architecture!
@@ -302,14 +309,6 @@ void crypto_x25519_inverse(u8 out[BYTES_ELEM_SIZE], const u8 in[BYTES_ELEM_SIZE]
 /********************* WARNING ********************************/
 // Functional only on CPU with Little Endian architecture!
 // Feature for Big Endian architecture is not implemented (yet). 
-void multiply_mod_l(u32 r[8], const u32 a[8], const u32 b[8]){
-    u32 c[16] = {0};
-    multiply(c, a, b);
-    mod_l((u8*) r, c);
-    WIPE_BUFFER(c);
-}
-
-
 // code that uses temporary memory-space on stack
 void inverse_mod_l(u8 out[BYTES_ELEM_SIZE], const u8 in[BYTES_ELEM_SIZE]){
     static u8 Lm2[BYTES_ELEM_SIZE] = { // L - 2

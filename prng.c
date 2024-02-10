@@ -5,16 +5,25 @@
 // ------------ THIS CODE IS A PART OF A MASTER'S THESIS ------------
 // ------------------------- Master thesis --------------------------
 // -----------------Patrik Zelenak & Milos Drutarovsky --------------
-// ---------------------------version T.T.4 -------------------------
+// ---------------------------version T.T.5 -------------------------
 // --------------------------- 05-02-2024 ---------------------------
 // ******************************************************************
 
+/**
+  * This file contains PRNG taken from:
+  * https://rosettacode.org/wiki/Linear_congruential_generator#C
+  * 
+  * A rand_32_bytes is a function that we use to generate a 
+  * random 32-byte value. We also changed srand() to s_rand()
+  *  in naming, and we made it available from external files
+  *  by removing the static keyword.
+**/
+
 #include "prng.h"
 
-/* always assuming int is at least 32 bits */
-int rseed = 0;
+static int32_t rseed = 0; // seed can be changed externally using s_rand()
 
-static inline void srand(int x)
+void s_rand(int32_t x)
 {
 	rseed = x;
 }

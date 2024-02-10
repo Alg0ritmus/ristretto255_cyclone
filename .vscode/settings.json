@@ -1,6 +1,8 @@
 {
     "files.associations": {
-        "prng.h": "c"
+        "prng.h": "c",
+        "config.h": "c",
+        "stddef.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

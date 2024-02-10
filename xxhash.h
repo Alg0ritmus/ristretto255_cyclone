@@ -5,9 +5,17 @@
 // ------------ THIS CODE IS A PART OF A MASTER'S THESIS ------------
 // ------------------------- Master thesis --------------------------
 // -----------------Patrik Zelenak & Milos Drutarovsky --------------
-// ---------------------------version T.T.4 -------------------------
-// --------------------------- 08-02-2024 ---------------------------
+// ---------------------------version T.T.5 -------------------------
+// --------------------------- 10-02-2024 ---------------------------
 // ******************************************************************
+
+/*
+ * This file contains original code from 
+ * https://github.com/easyaspi314/xxhash-clean. The only 
+ * change made was the replacement of malloc, which allocates memory
+ *  on the heap, with stack allocation. Changes were made in the 
+ * XXH32_createState function and XXH32_freeState accordingly.
+*/
 
 /*
  *  xxHash - Fast Hash algorithm
@@ -55,7 +63,6 @@
 #define _XXHASH_H
 
 #include <stddef.h> /* size_t, NULL */
-#include <stdlib.h> /* malloc, free */
 #include <stdint.h> /* uint8_t, uint32_t */
 #include <string.h> /* memset, memcpy */
 
@@ -85,8 +92,8 @@ typedef enum {
 } XXH_errorcode;
 
 /*======   Streaming   ======*/
-XXH32_state_t *XXH32_createState(void);
-XXH_errorcode XXH32_freeState(XXH32_state_t *const state);
+void XXH32_createState(XXH32_state_t * state);
+void XXH32_freeState(XXH32_state_t *const state);
 void XXH32_copyState(XXH32_state_t *const dest, XXH32_state_t const *const src);
 
 XXH_errorcode XXH32_reset(XXH32_state_t *const state, uint32_t const seed);

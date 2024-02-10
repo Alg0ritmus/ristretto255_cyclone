@@ -5,8 +5,8 @@
 // ------------ THIS CODE IS A PART OF A MASTER'S THESIS ------------
 // ------------------------- Master thesis --------------------------
 // -----------------Patrik Zelenak & Milos Drutarovsky --------------
-// ---------------------------version T.T.4 -------------------------
-// --------------------------- 08-02-2024 ---------------------------
+// ---------------------------version T.T.5 -------------------------
+// --------------------------- 10-02-2024 ---------------------------
 // ******************************************************************
 
 /*
@@ -98,18 +98,17 @@ static uint32_t XXH32_avalanche(uint32_t hash)
 /* Dynamically allocates XXH32_state_t. It is expected to free this with
  * XXH32_freeState.
  * returns: A pointer to an XXH64_state_t. This may be NULL. */
-XXH32_state_t *XXH32_createState(void)
+void XXH32_createState(XXH32_state_t * state)
 {
-    return (XXH32_state_t *) malloc(sizeof(XXH32_state_t));
+    memset(state, 0, sizeof(XXH32_state_t));
 }
 
 /* Frees an XXH64_state_t.
  * state:   The state to free.
  * returns: XXH_OK on success, XXH_ERROR on error. */
-XXH_errorcode XXH32_freeState(XXH32_state_t *const state)
+void XXH32_freeState(XXH32_state_t * state)
 {
-    free(state);
-    return XXH_OK;
+    memset(state, 0, sizeof(XXH32_state_t));
 }
 
 
@@ -243,71 +242,4 @@ uint32_t XXH32_digest(XXH32_state_t const *const state)
     return XXH32_avalanche(hash);
 }
 
-#ifdef XXH_SELFTEST
-#include <stdio.h>  /* fprintf, puts */
-#include <stdlib.h> /* exit */
-
-#define TEST_DATA_SIZE 101
-static int test_num = 0;
-
-/* Checks a hash value. */
-static void test_sequence(uint8_t const *const test_data, size_t const length,
-                          uint32_t const seed, uint32_t const expected)
-{
-    XXH32_state_t *state = XXH32_createState();
-    uint32_t result;
-    size_t i;
-
-    XXH32_reset(state, seed);
-    XXH32_update(state, test_data, length);
-    result = XXH32_digest(state);
-
-    if (result != expected) {
-        fprintf(stderr, "Error: Test %i: XXH32 test failed!\n", ++test_num);
-        fprintf(stderr, "Expected value: 0x%08X. Actual value: 0x%08X.\n", expected, result);
-        exit(1);
-    }
-
-    XXH32_reset(state, seed);
-    for (i = 0; i < length; i++) {
-        XXH32_update(state, &test_data[i], 1);
-    }
-    result = XXH32_digest(state);
-
-    if (result != expected) {
-        fprintf(stderr, "Error: Test %i: XXH32 test failed!\n", ++test_num);
-        fprintf(stderr, "Expected value: 0x%08X. Actual value: 0x%08X.\n", expected, result);
-        exit(1);
-    }
-    XXH32_freeState(state);
-}
-
-int main(void)
-{
-    uint32_t const prime = PRIME32_1;
-    uint8_t test_data[TEST_DATA_SIZE] = {0};
-    uint32_t byte_gen = prime;
-    int i = 0;
-
-    /* Fill the test_data buffer with "random" data */
-    for (; i < TEST_DATA_SIZE; i++) {
-        test_data[i] = (uint8_t) (byte_gen >> 24);
-        byte_gen *= byte_gen;
-    }
-
-    test_sequence(NULL     ,  0            , 0    , 0x02CC5D05U);
-    test_sequence(NULL     ,  0            , prime, 0x36B78AE7U);
-    test_sequence(test_data,  1            , 0    , 0xB85CBEE5U);
-    test_sequence(test_data,  1            , prime, 0xD5845D64U);
-    test_sequence(test_data, 14            , 0    , 0xE5AA0AB4U);
-    test_sequence(test_data, 14            , prime, 0x4481951DU);
-    test_sequence(test_data, TEST_DATA_SIZE, 0,     0x1F1AA412U);
-    test_sequence(test_data, TEST_DATA_SIZE, prime, 0x498EC8E2U);
-
-    puts("XXH32 reference implementation: OK");
-
-    return 0;
-}
-
-#endif /* XXH_SELFTEST */
 
