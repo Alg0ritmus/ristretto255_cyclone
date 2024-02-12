@@ -4,12 +4,12 @@
 C - `comp.bat`(windows) <br>
 # Progress:
 
-## 10.2.2024
+## 12.2.2024
 [U] ->  mensie zmeny v `prng.c`, nemenil som verzie<br>
 
 ## 10.2.2024
-[+] -> pridany popis k testu
-[+] -> nejake kozmeicke upravy spomenute v poznamkach
+[+] -> pridany popis k testu<br>
+[+] -> nejake kozmeicke upravy spomenute v poznamkach<br>
 [U] -> vymena malloc v xxHash -> zmeny v `xxhash.c/.h` <br>
 [U] -> moznost zmeny rseed z mainu -> funkcia `s_rand()` v `prng.c`<br>
 [U] -> fixnuta chyba pri nastaveni montgomeryho redukcie <br>
