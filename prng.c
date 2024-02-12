@@ -6,7 +6,7 @@
 // ------------------------- Master thesis --------------------------
 // -----------------Patrik Zelenak & Milos Drutarovsky --------------
 // ---------------------------version T.T.5 -------------------------
-// --------------------------- 05-02-2024 ---------------------------
+// --------------------------- 12-02-2024 ---------------------------
 // ******************************************************************
 
 /**
@@ -31,7 +31,7 @@ void s_rand(int32_t x)
 #ifndef MS_RAND
 #define RAND_MAX ((1U << 31) - 1)
 
-static inline int rand()
+static inline int32_t rand()
 {
 	return rseed = (rseed * 1103515245 + 12345) & RAND_MAX;
 }
@@ -39,9 +39,8 @@ static inline int rand()
 #else /* MS rand */
 
 #define RAND_MAX_32 ((1U << 31) - 1)
-#define RAND_MAX ((1U << 15) - 1)
 
-static inline int rand()
+static inline int32_t rand()
 {
 	return (rseed = (rseed * 214013 + 2531011) & RAND_MAX_32) >> 16;
 }
@@ -52,6 +51,6 @@ static inline int rand()
 
 void rand_32_bytes(u8 out[32]){
     for (int i = 0; i < 32; i++){
-        out[i] = (rand() >> 24) & 0xFF;
+        out[i] = (rand() >> 16) & 0xFF;
     }
 }

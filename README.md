@@ -5,6 +5,9 @@ C - `comp.bat`(windows) <br>
 # Progress:
 
 ## 10.2.2024
+[U] ->  mensie zmeny v `prng.c`, nemenil som verzie<br>
+
+## 10.2.2024
 [+] -> pridany popis k testu
 [+] -> nejake kozmeicke upravy spomenute v poznamkach
 [U] -> vymena malloc v xxHash -> zmeny v `xxhash.c/.h` <br>
