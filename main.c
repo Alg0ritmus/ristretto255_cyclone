@@ -705,7 +705,7 @@ int main(){
  * is performed multiple times in a round.
  */
 
-
+    #if 1
     // INIT xxHASH
     XXH32_createState(state);
     uint32_t result_of_complex_tests;
@@ -821,14 +821,7 @@ int main(){
     result_of_complex_tests = XXH32_digest(state);   
 
     printf("\nFinal xxHash Digest: %08x",result_of_complex_tests);   
-    
-    uint32_t x2= 0xFFFFFFFE;
-    uint32_t x1= 0xFFFFFFFF;
-
-    // (x1,x2) => 1, if x1 < x2
-    // (x1,x2) => 0, if x1 >= x2
-    printf("\n negative value: %08x", (x1 - x2) >> 31); 
-
+    #endif
     return 0;
 }
 

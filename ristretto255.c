@@ -538,18 +538,9 @@ static void cswap(ristretto255_point* p, ristretto255_point* q,u8 b){
 
 
 static u32 is_Canonical(const u32 in[FIELED_ELEM_SIZE]){
-  u32 result = 1;
-  for (u32 i = 0; i < FIELED_ELEM_SIZE; i++)
-  {
-    u32 x2= 0xFFFFFFFE;
-    u32 x1= 0xFFFFFFFF;
-
-    // (x1,x2) => 1, if x1 < x2
-    // (x1,x2) => 0, if x1 >= x2
-    result &= (in[i] - F_MODULUS[i]) >> 31; 
-  }
-  return result;
-  
+  u32 temp[FIELED_ELEM_SIZE];
+  carry25519(temp,in);
+  return feq(temp,in);  
 }
 
 
@@ -586,7 +577,7 @@ int ristretto255_decode(ristretto255_point *ristretto_out, const u8 bytes_in[BYT
 
   // check if bytes_in == checked_bytes, else abort
   //is_canonical = bytes_eq_32(checked_bytes,bytes_in);
-  is_canonical = 1-is_Canonical(_s);
+  is_canonical = is_Canonical(_s);
   is_negative = is_neg_bytes(bytes_in);
   
   //printf("ristretto255_decode: is_canonical=%d, is_negative=%d\n", is_canonical, is_negative);
@@ -891,39 +882,3 @@ void ristretto255_scalarmult(ristretto255_point* p, ristretto255_point* q,const 
   fe25519_reduce_emil(p->t);
   
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
