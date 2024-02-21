@@ -4,6 +4,15 @@
 C - `comp.bat`(windows) <br>
 # Progress:
 
+## 21.2.2024
+[U] ->  zmeny v `ristretto255.c`, nemenil som verzie<br>
+Fix potencialneho bugu. Vo funkcii  `ristretto255_decode()` sa <br>
+ako prvé musi skontrolovat ci vstupny byte-string je "kanonicky" < 2^255-19 <br>
+a nasledne sa pozerame na znamienko tohto vstupu. Predtym sme to riesili pomocou <br>
+unpack25519/pack25519 funkcie -> toto fungovalo niekedy davno pretoze sa zabezpecila<br>
+redukcia v tychto rutinach. Ale kedze nase terajsie unpack25519/pack25519 funkcie su <br>
+len memcpy tak toto zabezpecenie chyba.<br>
+
 ## 12.2.2024
 [U] ->  mensie zmeny v `prng.c`, nemenil som verzie<br>
 

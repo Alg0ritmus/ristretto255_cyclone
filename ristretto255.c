@@ -537,6 +537,13 @@ static void cswap(ristretto255_point* p, ristretto255_point* q,u8 b){
 }
 
 
+
+/**
+ * Interpret the string as an unsigned integer s in little-endian 
+ * representation. If the length of the string is not 32 bytes or 
+ * if the resulting value is >= p, decoding fails.
+ * Cite from: https://www.rfc-editor.org/rfc/rfc9496.html#section-4.3.1
+*/
 static u32 is_Canonical(const u32 in[FIELED_ELEM_SIZE]){
   u32 temp[FIELED_ELEM_SIZE];
   carry25519(temp,in);
@@ -565,19 +572,13 @@ int ristretto255_decode(ristretto255_point *ristretto_out, const u8 bytes_in[BYT
 
   field_elem temp1,temp2,temp3,temp4,temp5,temp6;
 
-  u8 checked_bytes[BYTES_ELEM_SIZE];
-
   // Step 1: Check that the encoding of the 
   // field element is canonical
   #define _s temp1
   unpack25519(_s, bytes_in);
-  pack25519(checked_bytes,_s);
-
-  
-
-  // check if bytes_in == checked_bytes, else abort
-  //is_canonical = bytes_eq_32(checked_bytes,bytes_in);
   is_canonical = is_Canonical(_s);
+
+  // check if input field element is not negative
   is_negative = is_neg_bytes(bytes_in);
   
   //printf("ristretto255_decode: is_canonical=%d, is_negative=%d\n", is_canonical, is_negative);
