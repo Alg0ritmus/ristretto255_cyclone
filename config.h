@@ -55,7 +55,7 @@
 	* well-tested (probably not fully functioning) on Big Endian
 	* architectures.
 **/
-//#define BIGENDIAN_FLAG 
+#define BIGENDIAN_FLAG 
 
 
 

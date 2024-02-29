@@ -124,16 +124,16 @@
 // Note: We could use pack impl. written below, but we chose store32_le_buf
 // function that has the same effect -> convert u32 array into u8 array
 // store32_le_buf() implementation can be found in modl.c
-#define unpack(uint32Array, uint8Array) store32_le_buf(uint32Array, uint8Array,8)
+// #define unpack(uint32Array, uint8Array) store32_le_buf(uint32Array, uint8Array,8)
 
-// void pack(u8* uint8Array,const u32* uint32Array) {
-//     for (int i = 0; i < 8; ++i) {
-//         uint8Array[i * 4 + 3] = ((uint32Array[i] >> 0) & 0xFF);
-//         uint8Array[i * 4 + 2] = ((uint32Array[i] >> 8) & 0xFF);
-//         uint8Array[i * 4 + 1] = ((uint32Array[i] >> 16) & 0xFF);
-//         uint8Array[i * 4 + 0] = ((uint32Array[i] >> 24) & 0xFF);
-//     }
-// }
+void pack(u8* uint8Array,const u32* uint32Array) {
+    for (int i = 0; i < 8; ++i) {
+        uint8Array[i * 4 + 3] = ((uint32Array[i] >> 0) & 0xFF);
+        uint8Array[i * 4 + 2] = ((uint32Array[i] >> 8) & 0xFF);
+        uint8Array[i * 4 + 1] = ((uint32Array[i] >> 16) & 0xFF);
+        uint8Array[i * 4 + 0] = ((uint32Array[i] >> 24) & 0xFF);
+    }
+}
 
 void unpack(u32* uint32Array, const u8* uint8Array) {
     for (int i = 0; i < 8; ++i) {
