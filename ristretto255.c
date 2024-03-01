@@ -127,17 +127,18 @@
 // #define unpack(uint32Array, uint8Array) store32_le_buf(uint32Array, uint8Array,8)
 
 void pack(u8* uint8Array,const u32* uint32Array) {
-    for (int i = 0; i < 8; ++i) {
-        uint8Array[i * 4 + 3] = ((uint32Array[i] >> 0) & 0xFF);
-        uint8Array[i * 4 + 2] = ((uint32Array[i] >> 8) & 0xFF);
-        uint8Array[i * 4 + 1] = ((uint32Array[i] >> 16) & 0xFF);
-        uint8Array[i * 4 + 0] = ((uint32Array[i] >> 24) & 0xFF);
-    }
+//     for (int i = 0; i < 8; ++i) {
+//         uint8Array[i * 4 + 3] = ((uint32Array[i] >> 0) & 0xFF);
+//         uint8Array[i * 4 + 2] = ((uint32Array[i] >> 8) & 0xFF);
+//         uint8Array[i * 4 + 1] = ((uint32Array[i] >> 16) & 0xFF);
+//         uint8Array[i * 4 + 0] = ((uint32Array[i] >> 24) & 0xFF);
+//     }
+  memcpy(uint8Array, (u8*) uint32Array, 32);
 }
 
 void unpack(u32* uint32Array, const u8* uint8Array) {
     for (int i = 0; i < 8; ++i) {
-        uint32Array[i] = (uint8Array[i * 4 + 3] << 0) |
+        uint32Array[7-i] = (uint8Array[i * 4 + 3] << 0) |
                          (uint8Array[i * 4 + 2] << 8) |
                          (uint8Array[i * 4 + 1] << 16)|
                           uint8Array[i * 4 + 0] << 24;
@@ -153,6 +154,15 @@ void unpack(u32* uint32Array, const u8* uint8Array) {
 }
 
 #endif //BIGENDIAN_FLAG
+
+void packskuska(u8* uint8Array,const u32* uint32Array){
+     for (int i = 0; i < 8; ++i) {
+         uint8Array[i * 4 + 3] = ((uint32Array[7-i] >> 0) & 0xFF);
+         uint8Array[i * 4 + 2] = ((uint32Array[7-i] >> 8) & 0xFF);
+         uint8Array[i * 4 + 1] = ((uint32Array[7-i] >> 16) & 0xFF);
+         uint8Array[i * 4 + 0] = ((uint32Array[7-i] >> 24) & 0xFF);
+     }
+}
 
 // Wiping ristretto255 point, using WIPE macro
 // Note that macro WIPE uses wipe_field_elem() function
@@ -540,6 +550,18 @@ static void cswap(ristretto255_point* p, ristretto255_point* q,u8 b){
 }
 
 
+/**
+ * Interpret the string as an unsigned integer s in little-endian 
+ * representation. If the length of the string is not 32 bytes or 
+ * if the resulting value is >= p, decoding fails.
+ * Cite from: https://www.rfc-editor.org/rfc/rfc9496.html#section-4.3.1
+*/
+static u32 is_Canonical(const u32 in[FIELED_ELEM_SIZE]){
+  u32 temp[FIELED_ELEM_SIZE];
+  carry25519(temp,in);
+  return feq(temp,in);  
+}
+
 
 /**
   * @brief Decode input bytes u8[32] to ristretto255_point
@@ -562,18 +584,13 @@ int ristretto255_decode(ristretto255_point *ristretto_out, const u8 bytes_in[BYT
 
   field_elem temp1,temp2,temp3,temp4,temp5,temp6;
 
-  u8 checked_bytes[BYTES_ELEM_SIZE];
-
   // Step 1: Check that the encoding of the 
   // field element is canonical
   #define _s temp1
   unpack25519(_s, bytes_in);
-  pack25519(checked_bytes,_s);
+  is_canonical = is_Canonical(_s);
 
-  
-
-  // check if bytes_in == checked_bytes, else abort
-  is_canonical = bytes_eq_32(checked_bytes,bytes_in);
+  // check if input field element is not negative
   is_negative = is_neg_bytes(bytes_in);
 
   if (is_canonical == 0 || is_negative==1){
@@ -589,11 +606,10 @@ int ristretto255_decode(ristretto255_point *ristretto_out, const u8 bytes_in[BYT
   #define u1 temp3
   #define u2 temp4
   
-
   pow2(_ss,_s);                           //s^2
   fsub(u1,F_ONE,_ss);                     // u1 = 1 + as^2
   fadd(u2,F_ONE,_ss);                     // u2 = 1 - as^2
-
+  
   
   #define uu1 temp5
   pow2(uu1,u1);                           // u1^2
@@ -613,6 +629,7 @@ int ristretto255_decode(ristretto255_point *ristretto_out, const u8 bytes_in[BYT
 
   #define _I temp6
   was_square = inv_sqrt(_I,F_ONE,vuu2);   // (was_square, invsqrt) = SQRT_RATIO_M1(1, v * u2_sqr)
+
 
   #define Dx temp5
   fmul(Dx,_I,u2);                         // den_x = invsqrt * u2
@@ -755,7 +772,13 @@ int ristretto255_encode(u8 bytes_out[BYTES_ELEM_SIZE], const ristretto255_point*
 
   fabsolute(temp_s,temp_s);               // s = CT_ABS(den_inv * (z - y))
   
+  
+  #ifdef BIGENDIAN_FLAG
+  packskuska(bytes_out,temp_s);
+  //pack25519(bytes_out,temp_s);
+  #else
   pack25519(bytes_out,temp_s);
+  #endif
 
   WIPE_BUFFER(enchanted_denominator); WIPE_BUFFER(Z_Y); WIPE_BUFFER(temp_s);
   WIPE_BUFFER(_X); WIPE_BUFFER(_Y); WIPE_BUFFER(iX);
@@ -804,8 +827,13 @@ int hash_to_group(u8 bytes_out[BYTES_ELEM_SIZE], const u8 bytes_in[HASH_BYTES_SI
   // MASK LSB for each half, this is equivalent to modulo 2**255
   // This step is very important, if skipped, hash_to_group 
   // returns invalid elements
+  #ifdef BIGENDIAN_FLAG
+  t1[0] &= 0x7F;
+  t2[0] &= 0x7F;
+  #else 
   t1[31] &= 0x7F;
   t2[31] &= 0x7F;
+  #endif
 
   // encode t1,t2 to field_elem
 

@@ -68,7 +68,7 @@
 	* Uncomment this, if you want to enable error messages.
 **/
 
-//#define DEBUG_FLAG 
+#define DEBUG_FLAG 
 
 
 
