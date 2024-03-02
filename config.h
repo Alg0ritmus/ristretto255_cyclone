@@ -55,7 +55,7 @@
 	* well-tested (probably not fully functioning) on Big Endian
 	* architectures.
 **/
-#define BIGENDIAN_FLAG 
+//#define BIGENDIAN_FLAG 
 
 
 
@@ -101,7 +101,7 @@
 	* Uncomment this flag if you want to use Montgomery’s reduction
 	* or comment, if you want to use Barrett’s reduction.
 **/
-//#define MONTGOMERY_MODL_INVERSE_FLAG
+#define MONTGOMERY_MODL_INVERSE_FLAG
 
 
 #endif // _CONFIG_H

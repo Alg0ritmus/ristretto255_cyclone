@@ -120,49 +120,74 @@
 // Note that we are using pack/unpack terminology just for copying data.
 // See our TweetNaCl implementation (https://github.com/Alg0ritmus/textbook_ristretto255),
 // where packing/unpacking takes big role.
-#ifdef BIGENDIAN_FLAG
-// Note: We could use pack impl. written below, but we chose store32_le_buf
-// function that has the same effect -> convert u32 array into u8 array
-// store32_le_buf() implementation can be found in modl.c
-// #define unpack(uint32Array, uint8Array) store32_le_buf(uint32Array, uint8Array,8)
+// #ifdef BIGENDIAN_FLAG
+// // Note: We could use pack impl. written below, but we chose store32_le_buf
+// // function that has the same effect -> convert u32 array into u8 array
+// // store32_le_buf() implementation can be found in modl.c
+// // #define unpack(uint32Array, uint8Array) store32_le_buf(uint32Array, uint8Array,8)
 
-void pack(u8* uint8Array,const u32* uint32Array) {
+// void pack(u8* uint8Array,const u32* uint32Array) {
+// //     for (int i = 0; i < 8; ++i) {
+// //         uint8Array[i * 4 + 3] = ((uint32Array[i] >> 0) & 0xFF);
+// //         uint8Array[i * 4 + 2] = ((uint32Array[i] >> 8) & 0xFF);
+// //         uint8Array[i * 4 + 1] = ((uint32Array[i] >> 16) & 0xFF);
+// //         uint8Array[i * 4 + 0] = ((uint32Array[i] >> 24) & 0xFF);
+// //     }
+//   memcpy(uint8Array, (u8*) uint32Array, 32);
+// }
+
+// void unpack(u32* uint32Array, const u8* uint8Array) {
 //     for (int i = 0; i < 8; ++i) {
-//         uint8Array[i * 4 + 3] = ((uint32Array[i] >> 0) & 0xFF);
-//         uint8Array[i * 4 + 2] = ((uint32Array[i] >> 8) & 0xFF);
-//         uint8Array[i * 4 + 1] = ((uint32Array[i] >> 16) & 0xFF);
-//         uint8Array[i * 4 + 0] = ((uint32Array[i] >> 24) & 0xFF);
+//         uint32Array[7-i] = (uint8Array[i * 4 + 3] << 0) |
+//                          (uint8Array[i * 4 + 2] << 8) |
+//                          (uint8Array[i * 4 + 1] << 16)|
+//                           uint8Array[i * 4 + 0] << 24;
 //     }
-  memcpy(uint8Array, (u8*) uint32Array, 32);
-}
+// }
+// #else
+// void pack(u8* uint8Array,const u32* uint32Array) { 
+//   memcpy(uint8Array, (u8*) uint32Array, 32);
+// }
 
-void unpack(u32* uint32Array, const u8* uint8Array) {
-    for (int i = 0; i < 8; ++i) {
-        uint32Array[7-i] = (uint8Array[i * 4 + 3] << 0) |
-                         (uint8Array[i * 4 + 2] << 8) |
-                         (uint8Array[i * 4 + 1] << 16)|
-                          uint8Array[i * 4 + 0] << 24;
-    }
-}
-#else
-void pack(u8* uint8Array,const u32* uint32Array) { 
-  memcpy(uint8Array, (u8*) uint32Array, 32);
-}
+// void unpack(u32* uint32Array, const u8* uint8Array) {
+//   memcpy(uint32Array, uint8Array, 32);
+// }
 
-void unpack(u32* uint32Array, const u8* uint8Array) {
-  memcpy(uint32Array, uint8Array, 32);
-}
+// #endif //BIGENDIAN_FLAG
 
-#endif //BIGENDIAN_FLAG
+// void packskuska(u8* uint8Array,const u32* uint32Array){
+//      for (int i = 0; i < 8; ++i) {
+//          uint8Array[i * 4 + 3] = ((uint32Array[7-i] >> 0) & 0xFF);
+//          uint8Array[i * 4 + 2] = ((uint32Array[7-i] >> 8) & 0xFF);
+//          uint8Array[i * 4 + 1] = ((uint32Array[7-i] >> 16) & 0xFF);
+//          uint8Array[i * 4 + 0] = ((uint32Array[7-i] >> 24) & 0xFF);
+//      }
+// }
 
-void packskuska(u8* uint8Array,const u32* uint32Array){
-     for (int i = 0; i < 8; ++i) {
-         uint8Array[i * 4 + 3] = ((uint32Array[7-i] >> 0) & 0xFF);
-         uint8Array[i * 4 + 2] = ((uint32Array[7-i] >> 8) & 0xFF);
-         uint8Array[i * 4 + 1] = ((uint32Array[7-i] >> 16) & 0xFF);
-         uint8Array[i * 4 + 0] = ((uint32Array[7-i] >> 24) & 0xFF);
-     }
-}
+
+//unpack
+  void bytes_to_int(u32* uint32Array, const u8* uint8Array){
+  for (uint8_t i = 0; i < 8; i++)
+  {
+    uint32Array[i] = (uint8Array[i*4 + 0]<<0) | (uint8Array[i*4 + 1]<<8) | (uint8Array[i*4 + 2]<<16) | (uint8Array[i*4 + 3]<<24);
+  }
+  
+  
+};
+
+//pack
+ void int_to_bytes(u8* uint8Array, const u32* uint32Array){
+  for (uint8_t i = 0; i < 8; i++)
+  {
+    uint8Array[i * 4 + 0] = ((uint32Array[i] >> 0) & 0xFF);
+    uint8Array[i * 4 + 1] = ((uint32Array[i] >> 8) & 0xFF);
+    uint8Array[i * 4 + 2] = ((uint32Array[i] >> 16) & 0xFF);
+    uint8Array[i * 4 + 3] = ((uint32Array[i] >> 24) & 0xFF);
+  }
+  
+};
+
+
 
 // Wiping ristretto255 point, using WIPE macro
 // Note that macro WIPE uses wipe_field_elem() function
@@ -176,8 +201,11 @@ static void wipe_ristretto255_point(ristretto255_point* ristretto_in){
 }
 
 
-#define pack25519 pack
-#define unpack25519 unpack
+#define pack25519 int_to_bytes
+#define unpack25519 bytes_to_int
+
+//#define pack25519 pack
+//#define unpack25519 unpack
 
 
 static void fe25519_reduce_emil(field_elem in){
@@ -223,14 +251,8 @@ void fneg(field_elem out, field_elem in){
 int is_neg(field_elem in){
 
     u8 temp[BYTES_ELEM_SIZE];
-    u8 temp2[BYTES_ELEM_SIZE];
     pack25519(temp, in);
-    packskuska(temp2, in);
-    
-    printf("is_neg vystup:\n");
-    print(in);
-    print_32(temp);
-    print_32(temp2);
+
     return temp[0] & 1;
 }
 
@@ -650,9 +672,9 @@ int ristretto255_decode(ristretto255_point *ristretto_out, const u8 bytes_in[BYT
   #define sDx temp2
   fmul(sDx,_s,Dx);                        // s*den_x
   fadd(ristretto_out->x,sDx,sDx);         // 2*s*den_x
-  printf("skuska: ristretto_out->x1:");print(ristretto_out->x);
+
   fabsolute(ristretto_out->x,ristretto_out->x); // x = CT_ABS(2 * s * den_x)
-  printf("skuska: ristretto_out->x2:");print(ristretto_out->x);
+
 
   #define Dy temp5
   fmul(Dy, _I, Dxv);                      // den_y = invsqrt * den_x * v
@@ -768,7 +790,6 @@ int ristretto255_encode(u8 bytes_out[BYTES_ELEM_SIZE], const ristretto255_point*
   fmul(XZ_inv,iY,Zinv);                   // x * z_inv
   #define n_Y _temp2
   fneg(n_Y,iX);                           // -(x * z_inv)
-  fcopy(iX,iX); 
   fe25519_reduce_emil(XZ_inv);
   swap25519(iX,n_Y,is_neg(XZ_inv));       // y = CT_SELECT(-y IF IS_NEGATIVE(x * z_inv) ELSE y)
 
@@ -785,12 +806,8 @@ int ristretto255_encode(u8 bytes_out[BYTES_ELEM_SIZE], const ristretto255_point*
   fabsolute(temp_s,temp_s);               // s = CT_ABS(den_inv * (z - y))
   
   
-  #ifdef BIGENDIAN_FLAG
-  packskuska(bytes_out,temp_s);
-  //pack25519(bytes_out,temp_s);
-  #else
   pack25519(bytes_out,temp_s);
-  #endif
+
 
   WIPE_BUFFER(enchanted_denominator); WIPE_BUFFER(Z_Y); WIPE_BUFFER(temp_s);
   WIPE_BUFFER(_X); WIPE_BUFFER(_Y); WIPE_BUFFER(iX);
@@ -832,20 +849,16 @@ int hash_to_group(u8 bytes_out[BYTES_ELEM_SIZE], const u8 bytes_in[HASH_BYTES_SI
 
   // make halves
   u8 t1[32], t2[32];
-  b_copy((uint32_t *)t1,(uint32_t *)bytes_in);
-  b_copy((uint32_t *)t2,(uint32_t *) (bytes_in+32));
+  memcpy(t1,bytes_in,32);
+  memcpy(t2,bytes_in+32,32);
 
-  
+ 
   // MASK LSB for each half, this is equivalent to modulo 2**255
   // This step is very important, if skipped, hash_to_group 
   // returns invalid elements
-  #ifdef BIGENDIAN_FLAG
-  t1[0] &= 0x7F;
-  t2[0] &= 0x7F;
-  #else 
+
   t1[31] &= 0x7F;
   t2[31] &= 0x7F;
-  #endif
 
   // encode t1,t2 to field_elem
 

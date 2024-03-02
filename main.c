@@ -30,13 +30,13 @@
 #include "modl.h"
 #include "test_config.h"
 
-#define pack25519 pack
-#define unpack25519 unpack
+#define pack25519 int_to_bytes
+#define unpack25519 bytes_to_int
 
 int main(){
     
 // if 1, small endian is choosed
-#ifndef BIGENDIAN_FLAG
+#if 1
 
     // Non-canonical field encodings.
     u8 non_canonical_vectors[4][BYTES_ELEM_SIZE] = {
@@ -284,7 +284,24 @@ int main(){
     // printf("------testujem endiana!");
     
     
+    // print_32(RISTRETTO255_BASEPOINT);
+    // print((uint32_t*)RISTRETTO255_BASEPOINT);
+
+    // uint32_t temporary1[8] = {0,0,0,0,0,0,0,0};
+    // uint8_t temporary2[32] = {
+    //     0,0,0,0,0,0,0,0,
+    //     0,0,0,0,0,0,0,0,
+    //     0,0,0,0,0,0,0,0,
+    //     0,0,0,0,0,0,0,0
+    // };
+
+    // bytes_to_int(temporary1,RISTRETTO255_BASEPOINT);
+    // print(temporary1);
+
+    // int_to_bytes(temporary2,temporary1);
+    // print_32(temporary2);
     
+
 
     
     int result = 1;
@@ -306,7 +323,7 @@ int main(){
         ristretto255_decode(out_rist,RISTRETTO255_BASEPOINT);
         ristretto255_scalarmult(out_rist2, out_rist,INTG);
         ristretto255_encode(bytes_out_,out_rist2);
-        printf("skuska mult. gen:");print_32(bytes_out_);
+        //printf("skuska mult. gen:");print_32(bytes_out_);
         subresult = bytes_eq_32(bytes_out_, SMALL_MULTIPLES_OF_GENERATOR_VECTORS[i]);
         result &= subresult;
 
@@ -331,6 +348,8 @@ int main(){
 
         #ifdef VERBOSE_FLAG
         if (!subresult){
+                print_32(bytes_out_);
+                print_32(MAP_VECTORS[i]);
                 printf("HASH_TO_GROUP TEST no.%d: FAILED! Error was found when testing vector MAP_VECTORS[%d]\n",i,i);
         }
         else{
