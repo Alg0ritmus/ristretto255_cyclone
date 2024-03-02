@@ -223,7 +223,14 @@ void fneg(field_elem out, field_elem in){
 int is_neg(field_elem in){
 
     u8 temp[BYTES_ELEM_SIZE];
+    u8 temp2[BYTES_ELEM_SIZE];
     pack25519(temp, in);
+    packskuska(temp2, in);
+    
+    printf("is_neg vystup:\n");
+    print(in);
+    print_32(temp);
+    print_32(temp2);
     return temp[0] & 1;
 }
 
@@ -251,6 +258,9 @@ void fabsolute(field_elem out, field_elem in){
     fcopy(temp,in); // temp=in, so I dont rewrite in
     fneg(out,temp); // out = ~in
     // CT_SWAP if it is neg.
+    // printf("is_neg: %d",is_neg(in));
+    // print(temp);
+    // print(out);
     swap25519(out,temp,is_neg(in));
 
     WIPE_BUFFER(temp);
@@ -608,8 +618,7 @@ int ristretto255_decode(ristretto255_point *ristretto_out, const u8 bytes_in[BYT
   
   pow2(_ss,_s);                           //s^2
   fsub(u1,F_ONE,_ss);                     // u1 = 1 + as^2
-  fadd(u2,F_ONE,_ss);                     // u2 = 1 - as^2
-  
+  fadd(u2,F_ONE,_ss);                     // u2 = 1 - as^2 
   
   #define uu1 temp5
   pow2(uu1,u1);                           // u1^2
@@ -619,6 +628,7 @@ int ristretto255_decode(ristretto255_point *ristretto_out, const u8 bytes_in[BYT
   fmul(duu1_positive,EDWARDS_D,uu1);      // D*u1^2
   #define duu1 temp5
   fneg(duu1,duu1_positive);               // -(D * u1^2) 
+  
 
   #define uu2 temp6
   pow2(uu2,u2);                           // u2^2
@@ -635,12 +645,14 @@ int ristretto255_decode(ristretto255_point *ristretto_out, const u8 bytes_in[BYT
   fmul(Dx,_I,u2);                         // den_x = invsqrt * u2
   #define Dxv temp4
   fmul(Dxv, Dx, _v);                      // den_x * v
-
+  
 
   #define sDx temp2
   fmul(sDx,_s,Dx);                        // s*den_x
   fadd(ristretto_out->x,sDx,sDx);         // 2*s*den_x
+  printf("skuska: ristretto_out->x1:");print(ristretto_out->x);
   fabsolute(ristretto_out->x,ristretto_out->x); // x = CT_ABS(2 * s * den_x)
+  printf("skuska: ristretto_out->x2:");print(ristretto_out->x);
 
   #define Dy temp5
   fmul(Dy, _I, Dxv);                      // den_y = invsqrt * den_x * v

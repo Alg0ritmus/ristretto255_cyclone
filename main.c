@@ -304,8 +304,9 @@ int main(){
     {
         INTG[0] = i;
         ristretto255_decode(out_rist,RISTRETTO255_BASEPOINT);
-        ristretto255_scalarmult(out_rist2, out_rist,INTG); // input scalar to scalarmult needs to be little endian format here
+        ristretto255_scalarmult(out_rist2, out_rist,INTG);
         ristretto255_encode(bytes_out_,out_rist2);
+        printf("skuska mult. gen:");print_32(bytes_out_);
         subresult = bytes_eq_32(bytes_out_, SMALL_MULTIPLES_OF_GENERATOR_VECTORS[i]);
         result &= subresult;
 
